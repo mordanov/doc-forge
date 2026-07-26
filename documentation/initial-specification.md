@@ -568,10 +568,6 @@ Version 1 shall support a provider abstraction layer.
 Supported providers include:
 
 - OpenAI
-- Anthropic
-- Google Gemini
-- OpenRouter
-- Ollama
 
 Every provider shall implement a common interface.
 
