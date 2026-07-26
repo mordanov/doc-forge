@@ -1,0 +1,31 @@
+id: lonely_planet
+version: "1.0.0"
+author: DocForge
+inherits: minimal
+manifest:
+  supports_cover: true
+  supports_sidebars: true
+  supports_icons: false
+palette:
+  primary: "#E63946"
+  secondary: "#1D3557"
+  accent: "#457B9D"
+  text: "#1a1a1a"
+  background: "#ffffff"
+  muted: "#6c757d"
+typography:
+  heading_font: "Arial"
+  body_font: "Arial"
+  mono_font: "Courier New"
+  heading_size_h1: 26
+  heading_size_h2: 18
+  heading_size_h3: 14
+  body_size: 10.5
+  line_spacing: 1.2
+  paragraph_spacing_before: 6
+  paragraph_spacing_after: 6
+cover:
+  background: "#E63946"
+  title_colour: "#ffffff"
+  subtitle_colour: "#f1faee"
+  include_logo: false

@@ -1,0 +1,6 @@
+project:
+  profile: offline
+  offline: true
+images:
+  enabled: true
+  policy: replace_placeholders

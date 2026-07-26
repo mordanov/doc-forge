@@ -1,0 +1,11 @@
+project:
+  profile: book
+  template: minimal
+  validation_level: strict
+ai:
+  creativity: 4
+images:
+  density: balanced
+output:
+  generate_cover: true
+  generate_toc: true

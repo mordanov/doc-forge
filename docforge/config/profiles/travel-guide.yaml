@@ -1,0 +1,15 @@
+project:
+  profile: travel-guide
+  template: national_geographic
+  validation_level: standard
+ai:
+  creativity: 7
+  prompt_set: editorial_v1
+images:
+  density: illustrated
+  sources:
+    - wikimedia
+    - unsplash
+output:
+  generate_cover: true
+  generate_toc: true

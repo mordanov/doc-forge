@@ -1,0 +1,11 @@
+project:
+  profile: ci
+  validation_level: strict
+  offline: false
+logging:
+  level: DEBUG
+  format: json
+images:
+  max_retries: 1
+ai:
+  max_retries: 1

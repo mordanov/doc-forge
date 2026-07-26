@@ -1,0 +1,11 @@
+project:
+  profile: report
+  template: corporate
+  validation_level: strict
+ai:
+  creativity: 2
+images:
+  density: minimal
+output:
+  generate_cover: true
+  generate_toc: true
