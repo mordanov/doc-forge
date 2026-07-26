@@ -1,0 +1,126 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Distribution / packaging
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# MyPy / Pyright
+.mypy_cache/
+.pyright/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# ─── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+.npm
+.yarn/
+.pnp.*
+.pnp.js
+
+# Build output
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# ─── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# ─── DocForge runtime ─────────────────────────────────────────────────────────
+# Cache
+.docforge_cache/
+cache/
+*.cache
+
+# Rendered output (do not commit generated publications)
+output/
+rendered/
+*.docx
+*.pdf
+!examples/**/*.docx
+!tests/**/*.docx
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ─── IDEs & Editors ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.orig
+*.bak
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+.pytest_cache/
+test-results/
+golden/__snapshots__/
+*.snap
+
+# ─── Misc ─────────────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+tmp/
+temp/
