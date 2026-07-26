@@ -286,10 +286,6 @@ DocForge uses AI exclusively for editorial decisions. The AI never modifies docu
 | Provider | Status |
 |---|---|
 | OpenAI | Supported (v1) |
-| Anthropic | Supported (v1) |
-| Google Gemini | Supported (v1) |
-| OpenRouter | Supported (v1) |
-| Ollama | Supported (v1) |
 
 ---
 
