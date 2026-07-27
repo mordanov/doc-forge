@@ -28,7 +28,8 @@ def optimise(
     """
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    with Image.open(source) as img:
+    with Image.open(source) as raw:
+        img: Image.Image = raw
         exif = _extract_exif(img)
         img = _to_srgb(img)
         img = _resize(img, max_width, max_height)
@@ -50,7 +51,7 @@ def _resize(img: Image.Image, max_width: int, max_height: int) -> Image.Image:
         return img
     ratio = min(max_width / w, max_height / h)
     new_size = (int(w * ratio), int(h * ratio))
-    return img.resize(new_size, Image.LANCZOS)
+    return img.resize(new_size, Image.Resampling.LANCZOS)
 
 
 def _to_srgb(img: Image.Image) -> Image.Image:
