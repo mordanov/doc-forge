@@ -1,0 +1,6 @@
+project:
+  profile: production
+  validation_level: strict
+logging:
+  level: INFO
+  format: json

@@ -1,0 +1,50 @@
+# DocForge sample configuration
+# Place at project root as docforge.yaml or pass via --config flag
+
+project:
+  language: en
+  template: minimal
+  profile: development
+  validation_level: standard
+  ai_explainability: off
+  offline: false
+
+ai:
+  provider: openai
+  model: gpt-4o
+  creativity: 5
+  max_retries: 3
+  prompt_set: editorial_v1
+
+images:
+  enabled: true
+  policy: auto_search
+  sources:
+    - wikimedia
+  density: balanced
+  max_file_size_mb: 15
+  max_retries: 3
+
+output:
+  formats:
+    - docx
+  generate_cover: true
+  generate_toc: true
+  generate_page_numbers: true
+  generate_headers_footers: true
+  cover_style: auto
+  toc_mode: generate
+  headers_footers_mode: generate
+
+logging:
+  level: INFO
+  format: human
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+  token_ttl_hours: 24
+  max_upload_mb: 50
+
+cache:
+  max_size_mb: 2048

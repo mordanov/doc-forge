@@ -1,0 +1,31 @@
+id: corporate
+version: "1.0.0"
+author: DocForge
+inherits: minimal
+manifest:
+  supports_cover: true
+  supports_sidebars: false
+  supports_icons: false
+palette:
+  primary: "#003366"
+  secondary: "#666666"
+  accent: "#0066CC"
+  text: "#1a1a1a"
+  background: "#ffffff"
+  muted: "#999999"
+typography:
+  heading_font: "Calibri"
+  body_font: "Calibri"
+  mono_font: "Consolas"
+  heading_size_h1: 20
+  heading_size_h2: 16
+  heading_size_h3: 13
+  body_size: 11
+  line_spacing: 1.15
+  paragraph_spacing_before: 6
+  paragraph_spacing_after: 6
+cover:
+  background: "#003366"
+  title_colour: "#ffffff"
+  subtitle_colour: "#ccddee"
+  include_logo: false

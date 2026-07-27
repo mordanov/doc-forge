@@ -1,0 +1,31 @@
+id: dk_eyewitness
+version: "1.0.0"
+author: DocForge
+inherits: minimal
+manifest:
+  supports_cover: true
+  supports_sidebars: true
+  supports_icons: true
+palette:
+  primary: "#003087"
+  secondary: "#CC0000"
+  accent: "#F5A623"
+  text: "#1a1a1a"
+  background: "#ffffff"
+  muted: "#6c757d"
+typography:
+  heading_font: "Arial"
+  body_font: "Arial Narrow"
+  mono_font: "Courier New"
+  heading_size_h1: 24
+  heading_size_h2: 16
+  heading_size_h3: 12
+  body_size: 9.5
+  line_spacing: 1.1
+  paragraph_spacing_before: 4
+  paragraph_spacing_after: 4
+cover:
+  background: "#003087"
+  title_colour: "#ffffff"
+  subtitle_colour: "#F5A623"
+  include_logo: false

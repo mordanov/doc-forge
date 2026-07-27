@@ -1,0 +1,84 @@
+id: editorial_v1
+version: "1.0.0"
+description: "Editorial layout decisions for publication-quality DOCX rendering"
+providers:
+  - openai
+context_fields:
+  - chapter_id
+  - chapter_title
+  - chapter_word_count
+  - has_tables
+  - has_images
+  - placeholder_count
+  - document_language
+response_schema:
+  type: object
+  required:
+    - chapter_style
+    - photo_layout
+    - sidebar
+    - table_style
+    - typography_variant
+    - pull_quote
+    - callout
+    - page_balance
+  properties:
+    chapter_style:
+      type: string
+      enum: [standard, feature, opener]
+    photo_layout:
+      type: string
+      enum: [none, inline, two_column, full_width, magazine]
+    sidebar:
+      type: object
+      required: [enabled, type]
+      properties:
+        enabled:
+          type: boolean
+        type:
+          type: string
+          enum: [none, minimal, editorial, magazine]
+    table_style:
+      type: string
+    typography_variant:
+      type: string
+      enum: [conservative, editorial, magazine, luxury]
+    heading_colour:
+      type: ["string", "null"]
+    pull_quote:
+      type: boolean
+    callout:
+      type: boolean
+    page_balance:
+      type: string
+      enum: [tight, balanced, spacious]
+template: |
+  You are an expert editorial designer. Given the following chapter information,
+  produce a JSON layout decision that will make this chapter visually compelling
+  for a publication-quality document.
+
+  Chapter ID: {{ chapter_id }}
+  Chapter Title: {{ chapter_title }}
+  Word Count: {{ chapter_word_count }}
+  Has Tables: {{ has_tables }}
+  Has Image Placeholders: {{ placeholder_count }} placeholder(s)
+  Document Language: {{ document_language }}
+
+  Return ONLY a valid JSON object matching this schema:
+  {
+    "chapter_style": "standard|feature|opener",
+    "photo_layout": "none|inline|two_column|full_width|magazine",
+    "sidebar": { "enabled": true/false, "type": "none|minimal|editorial|magazine" },
+    "table_style": "default|striped|minimal",
+    "typography_variant": "conservative|editorial|magazine|luxury",
+    "heading_colour": "#RRGGBB or null",
+    "pull_quote": true/false,
+    "callout": true/false,
+    "page_balance": "tight|balanced|spacious"
+  }
+
+  Guidelines:
+  - Use "opener" style for the first chapter only
+  - Use "feature" for chapters with 3+ image placeholders
+  - Enable sidebars only for editorial or magazine typography
+  - Keep heading_colour null unless the chapter calls for strong visual identity
