@@ -1,0 +1,96 @@
+import type { Preset } from '@/types/ui'
+
+export const PRESETS: Preset[] = [
+  {
+    id: 'travel-guide',
+    name: 'Travel Guide',
+    description: 'Vibrant imagery, editorial layout, travel-focused typography',
+    config: {
+      template: 'lonely_planet',
+      imageDensity: 'illustrated',
+      layoutDensity: 'spacious',
+      typography: 'serif',
+      coverPage: 'full-bleed',
+      tableOfContents: 'illustrated',
+    },
+  },
+  {
+    id: 'book',
+    name: 'Book',
+    description: 'Classic long-form reading layout with clean typography',
+    config: {
+      template: 'minimal',
+      imageDensity: 'minimal',
+      layoutDensity: 'balanced',
+      typography: 'serif',
+      coverPage: 'simple',
+      tableOfContents: 'standard',
+    },
+  },
+  {
+    id: 'magazine',
+    name: 'Magazine',
+    description: 'Dynamic grid layout, bold headings, rich image placement',
+    config: {
+      template: 'dk_eyewitness',
+      imageDensity: 'maximum',
+      layoutDensity: 'balanced',
+      typography: 'display',
+      coverPage: 'magazine',
+      tableOfContents: 'visual',
+    },
+  },
+  {
+    id: 'academic-paper',
+    name: 'Academic Paper',
+    description: 'Structured, citation-ready, minimal decoration',
+    config: {
+      template: 'minimal',
+      imageDensity: 'minimal',
+      layoutDensity: 'compact',
+      typography: 'serif',
+      coverPage: 'title-page',
+      tableOfContents: 'standard',
+      validationLevel: 'strict',
+    },
+  },
+  {
+    id: 'annual-report',
+    name: 'Annual Report',
+    description: 'Professional charts, data-heavy sections, executive summary',
+    config: {
+      template: 'corporate',
+      imageDensity: 'balanced',
+      layoutDensity: 'balanced',
+      typography: 'sans',
+      coverPage: 'branded',
+      tableOfContents: 'standard',
+    },
+  },
+  {
+    id: 'corporate-report',
+    name: 'Corporate Report',
+    description: 'Clean brand-aligned presentation with structured sections',
+    config: {
+      template: 'corporate',
+      imageDensity: 'balanced',
+      layoutDensity: 'compact',
+      typography: 'sans',
+      coverPage: 'branded',
+      tableOfContents: 'standard',
+    },
+  },
+  {
+    id: 'newsletter',
+    name: 'Newsletter',
+    description: 'Columnar layout, headline-driven, email-friendly output',
+    config: {
+      template: 'minimal',
+      imageDensity: 'balanced',
+      layoutDensity: 'compact',
+      typography: 'sans',
+      coverPage: 'none',
+      tableOfContents: 'none',
+    },
+  },
+]
