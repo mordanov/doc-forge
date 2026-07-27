@@ -1,4 +1,5 @@
 """Filesystem-based cache backend."""
+
 from __future__ import annotations
 
 import json
