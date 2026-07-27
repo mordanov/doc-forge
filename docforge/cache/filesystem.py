@@ -57,7 +57,7 @@ class FilesystemCache(CacheBase):
         total_size = 0
         item_count = 0
         for path in self._root.rglob("*"):
-            if path.is_file() and not path.suffix == ".json":
+            if path.is_file() and path.suffix != ".json":
                 total_size += path.stat().st_size
                 item_count += 1
         return {
