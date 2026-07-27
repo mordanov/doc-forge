@@ -77,13 +77,25 @@ A user visits the About page to find the application version, read documentation
 
 ### Edge Cases
 
-- What happens when a file larger than 50 MB is dropped onto the upload area?
-- How does the wizard behave if the backend is unreachable during Step 5?
-- What happens if the user closes the browser during rendering?
-- How does the Projects page behave with 100+ projects (pagination or infinite scroll)?
-- What happens if an AI API key is invalid when a job starts?
-- How does the creativity slider behave when a preset changes it to a value outside the user's last manual input?
-- What is shown if the backend returns a theme list with no preview images?
+- What happens when a file larger than 50 MB is dropped onto the upload area? → Rejected client-side before upload with an inline error message in the upload area; no network request is made.
+- How does the wizard behave if the backend is unreachable during Step 5? → Silent retry; "Connection lost — retrying…" banner after 3 consecutive failures, auto-dismissed on reconnect.
+- What happens if the user closes the browser during rendering? → Job continues on the backend; on return the user sees the job status on the Projects page (or resumes polling if they navigate back to the wizard).
+- How does the Projects page behave with 100+ projects? → Paginated, 20 per page.
+- What happens if an AI API key is invalid when a job starts? → The job transitions to FAILED on the backend; Step 5 displays the error message from the job record with a "Back to settings" action link.
+- How does the creativity slider behave when a preset changes it to a value outside the user's last manual input? → Preset value is applied and the slider moves to it; subsequent manual adjustment overrides the preset value without re-applying the preset.
+- What is shown if the backend returns a theme list with no preview images? → A placeholder colour swatch using the theme's primary palette colour is shown in place of the preview image.
+
+---
+
+## Clarifications
+
+### Session 2026-07-27
+
+- Q: What is the primary navigation pattern? → A: Left sidebar with icons and labels, always visible, collapses to icon-only on narrow viewports.
+- Q: How does the Projects page handle 100+ projects? → A: Pagination — fixed page size of 20, numbered page controls at the bottom.
+- Q: What happens to wizard progress on page refresh or accidental navigation? → A: Draft is restored with a confirmation prompt: "You have an unfinished project — continue or start fresh?"
+- Q: What does Step 5 show when the backend becomes unreachable mid-render? → A: Retry silently; surface a "Connection lost — retrying…" banner after 3 consecutive polling failures.
+- Q: What loading pattern is used across the application? → A: Skeleton screens for page and list loads; button-level spinner for inline actions (delete, duplicate, submit).
 
 ---
 
@@ -91,18 +103,19 @@ A user visits the About page to find the application version, read documentation
 
 ### Functional Requirements
 
-- **FR-001**: The application MUST provide a five-page structure: Home, New Project, Projects, Settings, About.
+- **FR-001**: The application MUST provide a five-page structure: Home, New Project, Projects, Settings, About, accessible via a persistent left sidebar. The sidebar MUST display icons and labels when space permits and collapse to icon-only on viewports below 1024 px wide.
 - **FR-002**: The Home page MUST display recent projects, quick actions, and a drag-and-drop upload area with a "Create Publication" primary CTA.
-- **FR-003**: The New Project wizard MUST guide users through exactly five sequential steps: Upload, AI Configuration, Publication Configuration, Preview, Generate.
+- **FR-003**: The New Project wizard MUST guide users through exactly five sequential steps: Upload, AI Configuration, Publication Configuration, Preview, Generate. Wizard progress MUST be persisted across page reloads; on return, the user MUST be shown a prompt: "You have an unfinished project — continue or start fresh?" Choosing "start fresh" discards the saved draft.
 - **FR-004**: Step 1 MUST display document metadata (filename, page count, heading count, table count, image count, estimated complexity) after upload.
 - **FR-005**: Step 2 MUST allow selection of AI provider (OpenAI), AI model (GPT-5.6, GPT-5.6-mini, GPT-5.6-sol, GPT-5.5), AI quality (Fast / Balanced / Maximum Quality), and a creativity slider (1–10) with a live description.
 - **FR-006**: Step 3 MUST allow configuration of theme, output format, language, image policy, image sources, image density, layout density, typography, colour palette, sidebar style, cover page, table of contents, headers and footers, validation level, AI explainability, and offline mode toggle.
 - **FR-007**: Step 3 MUST provide built-in presets (Travel Guide, Book, Magazine, Academic Paper, Annual Report, Corporate Report, Newsletter) that configure all options at once while remaining individually overridable.
 - **FR-008**: Step 3 MUST include an "Advanced Settings" section (collapsed by default) containing prompt version, theme version, parallel downloads, retry count, timeout, cache location, cache size, and maximum AI requests.
 - **FR-009**: Step 4 MUST display a preview dashboard with estimated rendering time, AI cost, AI requests, downloaded images, page count, photographs, captions, appendix, cover page, table of contents, warnings, validation summary, and licence summary.
-- **FR-010**: Step 5 MUST display a real-time progress timeline covering: Uploading, Analysing, AI Processing, Searching Images, Downloading Images, Rendering, Validation, Export, Finished — each with icon, progress indicator, and elapsed time.
-- **FR-011**: The Projects page MUST list all past publications as cards, each showing name, creation date, template, language, AI model, rendering status, and output formats, with Open, Duplicate, Download, and Delete actions.
+- **FR-010**: Step 5 MUST display a real-time progress timeline covering: Uploading, Analysing, AI Processing, Searching Images, Downloading Images, Rendering, Validation, Export, Finished — each with icon, progress indicator, and elapsed time. When backend polling fails, the UI MUST retry silently and display a "Connection lost — retrying…" banner only after 3 consecutive failures; the banner MUST dismiss automatically when connectivity is restored.
+- **FR-011**: The Projects page MUST list all past publications as cards, each showing name, creation date, template, language, AI model, rendering status, and output formats, with Open, Duplicate, Download, and Delete actions. The list MUST be paginated with a fixed page size of 20 and numbered page controls; projects are ordered by creation date descending.
 - **FR-012**: Every interactive control MUST include a tooltip and a short explanatory label.
+- **FR-017**: Page and list loading states MUST use skeleton screens (content-shaped placeholders). Inline actions (delete, duplicate, form submit) MUST show a button-level spinner and disable the control while in progress.
 - **FR-013**: The application MUST support Dark Mode and Light Mode, switchable by the user and persisted across sessions.
 - **FR-014**: The application MUST comply with WCAG AA: keyboard navigation, visible focus indicators, and screen reader support.
 - **FR-015**: The colour palette option MUST reveal a colour picker when "Custom" is selected.
