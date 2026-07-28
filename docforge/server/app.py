@@ -30,13 +30,24 @@ def create_app(
 
     @app.on_event("startup")
     async def startup():
+        import os
+
+        from docforge.server.auth import hash_password
+
         store.init_db(db_path)
         upload_dir.mkdir(parents=True, exist_ok=True)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        user = store.get_user(store.get_connection(db_path))
+        conn = store.get_connection(db_path)
+        user = store.get_user(conn)
         if not user:
-            logger.warning("docforge_not_initialised", hint="Run `docforge init` first")
+            username = os.getenv("DOCFORGE_USERNAME", "").strip()
+            password = os.getenv("DOCFORGE_PASSWORD", "").strip()
+            if username and len(password) >= 8:
+                store.upsert_user(conn, username, hash_password(password))
+                logger.info("user_auto_provisioned", username=username)
+            else:
+                logger.warning("docforge_not_initialised", hint="Run `docforge init` first")
 
         from docforge.server.jobs import get_job_queue
 
