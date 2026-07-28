@@ -33,15 +33,21 @@ async def list_projects(
     limit: int = 20,
 ) -> list[dict]:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    return store.list_projects(conn, offset=offset, limit=limit)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        return store.list_projects(conn, offset=offset, limit=limit)
+    finally:
+        conn.close()
 
 
 @router.get("/{project_id}")
 async def get_project(project_id: str, request: Request) -> dict:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    project = store.get_project(conn, project_id)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        project = store.get_project(conn, project_id)
+    finally:
+        conn.close()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
@@ -50,8 +56,11 @@ async def get_project(project_id: str, request: Request) -> dict:
 @router.post("/{project_id}/duplicate", status_code=status.HTTP_202_ACCEPTED)
 async def duplicate_project(project_id: str, request: Request) -> dict:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    project = store.get_project(conn, project_id)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        project = store.get_project(conn, project_id)
+    finally:
+        conn.close()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -76,7 +85,7 @@ async def duplicate_project(project_id: str, request: Request) -> dict:
         ai_model=project.get("ai_model", "gpt-4o"),
     )
 
-    queue = get_job_queue(Path(request.app.state.db_path))
+    queue = get_job_queue(request.app.state.db_url)
     await queue.submit(job_req)
 
     return {"job_id": job_id, "status": "QUEUED"}
@@ -85,17 +94,20 @@ async def duplicate_project(project_id: str, request: Request) -> dict:
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: str, request: Request) -> Response:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    project = store.get_project(conn, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        project = store.get_project(conn, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
 
-    output_paths = json.loads(project.get("output_paths", "[]"))
-    for path_str in output_paths:
-        p = Path(path_str)
-        if p.exists():
-            p.unlink()
-            logger.info("project_output_deleted", path=str(p))
+        output_paths = json.loads(project.get("output_paths", "[]"))
+        for path_str in output_paths:
+            p = Path(path_str)
+            if p.exists():
+                p.unlink()
+                logger.info("project_output_deleted", path=str(p))
 
-    store.delete_project(conn, project_id)
+        store.delete_project(conn, project_id)
+    finally:
+        conn.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

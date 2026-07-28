@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 import typer
 from rich.console import Console
@@ -17,11 +16,6 @@ console = Console()
 
 def init_command(
     force: bool = typer.Option(False, "--force", help="Overwrite existing user account"),
-    db: Path = typer.Option(
-        Path.home() / ".docforge" / "docforge.db",
-        "--db",
-        help="Path to SQLite database",
-    ),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
 ) -> None:
     """Provision the single-user account from .env credentials."""
@@ -31,11 +25,14 @@ def init_command(
 
     load_dotenv()
 
+    db_url = os.getenv("DATABASE_URL", "").strip()
     username = os.getenv("DOCFORGE_USERNAME", "").strip()
     password = os.getenv("DOCFORGE_PASSWORD", "").strip()
     secret_key = os.getenv("DOCFORGE_SECRET_KEY", "").strip()
 
     errors = []
+    if not db_url:
+        errors.append("DATABASE_URL is not set in .env")
     if not username:
         errors.append("DOCFORGE_USERNAME is not set in .env")
     if len(password) < 8:
@@ -48,20 +45,21 @@ def init_command(
             console.print(f"[red]Error:[/red] {err}")
         raise typer.Exit(1)
 
-    store.init_db(db)
-    conn = store.get_connection(db)
-    existing = store.get_user(conn)
+    store.init_db(db_url)
+    conn = store.get_connection(db_url)
+    try:
+        existing = store.get_user(conn)
 
-    if existing and not force:
-        console.print(
-            f"[yellow]User '{existing['username']}' already exists. Use --force to overwrite.[/yellow]"
-        )
-        raise typer.Exit(1)
+        if existing and not force:
+            console.print(
+                f"[yellow]User '{existing['username']}' already exists. Use --force to overwrite.[/yellow]"
+            )
+            raise typer.Exit(1)
 
-    password_hash = hash_password(password)
-    store.upsert_user(conn, username, password_hash)
-    conn.commit()
+        password_hash = hash_password(password)
+        store.upsert_user(conn, username, password_hash)
+    finally:
+        conn.close()
 
     console.print(f"[green]✓[/green] User '{username}' created successfully.")
-    console.print(f"  Database: {db}")
     console.print("  Run [cyan]docforge server start[/cyan] to start the API server.")

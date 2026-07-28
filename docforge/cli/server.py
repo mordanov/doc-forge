@@ -19,9 +19,6 @@ _PID_FILE = Path.home() / ".docforge" / "server.pid"
 def start(
     host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),
     port: int = typer.Option(8000, "--port", help="Bind port"),
-    db: Path = typer.Option(
-        Path.home() / ".docforge" / "docforge.db", "--db", help="SQLite database path"
-    ),
     upload_dir: Path = typer.Option(Path.home() / ".docforge" / "uploads", "--upload-dir"),
     output_dir: Path = typer.Option(Path.home() / ".docforge" / "outputs", "--output-dir"),
     workers: int = typer.Option(1, "--workers", help="Number of Uvicorn workers"),
@@ -36,6 +33,11 @@ def start(
         console.print("[red]Error:[/red] DOCFORGE_SECRET_KEY must be at least 32 characters")
         raise typer.Exit(1)
 
+    db_url = os.getenv("DATABASE_URL", "")
+    if not db_url:
+        console.print("[red]Error:[/red] DATABASE_URL environment variable is required")
+        raise typer.Exit(1)
+
     token_ttl = int(os.getenv("DOCFORGE_TOKEN_TTL_HOURS", "24"))
 
     import uvicorn
@@ -43,7 +45,7 @@ def start(
     from docforge.server.app import create_app
 
     application = create_app(
-        db_path=db,
+        db_url=db_url,
         upload_dir=upload_dir,
         output_dir=output_dir,
         secret_key=secret_key,

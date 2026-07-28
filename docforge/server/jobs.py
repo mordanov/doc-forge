@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -29,9 +28,9 @@ class JobRequest:
 
 
 class JobQueue:
-    def __init__(self, db_path: Path) -> None:
+    def __init__(self, db_url: str) -> None:
         self._queue: asyncio.Queue[JobRequest] = asyncio.Queue()
-        self._db_path = db_path
+        self._db_url = db_url
         self._worker_task: asyncio.Task | None = None
         self._active_jobs: set[str] = set()
 
@@ -43,22 +42,29 @@ class JobQueue:
             self._worker_task.cancel()
 
     async def submit(self, request: JobRequest) -> str:
-        conn = store.get_connection(self._db_path)
-        store.insert_job(
-            conn,
-            request.job_id,
-            request.input_path.name,
-            str(request.input_path),
-            request.config,
-        )
+        conn = store.get_connection(self._db_url)
+        try:
+            store.insert_job(
+                conn,
+                request.job_id,
+                request.input_path.name,
+                str(request.input_path),
+                request.config,
+            )
+        finally:
+            conn.close()
         await self._queue.put(request)
         logger.info("job_submitted", job_id=request.job_id)
         return request.job_id
 
-    async def cancel(self, job_id: str, conn: sqlite3.Connection) -> bool:
+    async def cancel(self, job_id: str) -> bool:
         if job_id in self._active_jobs:
-            return False  # Can't cancel running job in this simple implementation
-        store.update_job_status(conn, job_id, "CANCELLED", "FINISHED")
+            return False
+        conn = store.get_connection(self._db_url)
+        try:
+            store.update_job_status(conn, job_id, "CANCELLED", "FINISHED")
+        finally:
+            conn.close()
         return True
 
     async def _worker(self) -> None:
@@ -67,10 +73,13 @@ class JobQueue:
             request = await self._queue.get()
             self._active_jobs.add(request.job_id)
             start_time = time.monotonic()
-            conn = store.get_connection(self._db_path)
 
             try:
-                store.update_job_status(conn, request.job_id, "RUNNING", "ANALYSING", progress=5)
+                conn = store.get_connection(self._db_url)
+                try:
+                    store.update_job_status(conn, request.job_id, "RUNNING", "ANALYSING", progress=5)
+                finally:
+                    conn.close()
 
                 output_path = request.output_dir / f"{request.job_id}.docx"
                 request.output_dir.mkdir(parents=True, exist_ok=True)
@@ -79,18 +88,22 @@ class JobQueue:
                     stage: RenderStage,
                     progress: int,
                     message: str,
-                    _conn: sqlite3.Connection = conn,
+                    _db_url: str = self._db_url,
                     _job_id: str = request.job_id,
                     _t0: float = start_time,
                 ) -> None:
-                    store.update_job_status(
-                        _conn,
-                        _job_id,
-                        "RUNNING",
-                        stage.value,
-                        progress=progress,
-                        elapsed=time.monotonic() - _t0,
-                    )
+                    c = store.get_connection(_db_url)
+                    try:
+                        store.update_job_status(
+                            c,
+                            _job_id,
+                            "RUNNING",
+                            stage.value,
+                            progress=progress,
+                            elapsed=time.monotonic() - _t0,
+                        )
+                    finally:
+                        c.close()
 
                 report = await render_pipeline(
                     input_path=request.input_path,
@@ -103,42 +116,50 @@ class JobQueue:
                 )
 
                 elapsed = time.monotonic() - start_time
-                if report.succeeded():
-                    store.update_job_status(
-                        conn,
-                        request.job_id,
-                        "COMPLETED",
-                        "FINISHED",
-                        progress=100,
-                        elapsed=elapsed,
-                        output_paths=[str(output_path)],
-                        warnings=report.warnings,
-                    )
-                    logger.info("job_completed", job_id=request.job_id, elapsed=elapsed)
-                else:
+                conn = store.get_connection(self._db_url)
+                try:
+                    if report.succeeded():
+                        store.update_job_status(
+                            conn,
+                            request.job_id,
+                            "COMPLETED",
+                            "FINISHED",
+                            progress=100,
+                            elapsed=elapsed,
+                            output_paths=[str(output_path)],
+                            warnings=report.warnings,
+                        )
+                        logger.info("job_completed", job_id=request.job_id, elapsed=elapsed)
+                    else:
+                        store.update_job_status(
+                            conn,
+                            request.job_id,
+                            "FAILED",
+                            "FINISHED",
+                            elapsed=elapsed,
+                            error=report.fatal_failure,
+                            warnings=report.warnings,
+                        )
+                        logger.error("job_failed", job_id=request.job_id, error=report.fatal_failure)
+                finally:
+                    conn.close()
+
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:
+                elapsed = time.monotonic() - start_time
+                conn = store.get_connection(self._db_url)
+                try:
                     store.update_job_status(
                         conn,
                         request.job_id,
                         "FAILED",
                         "FINISHED",
                         elapsed=elapsed,
-                        error=report.fatal_failure,
-                        warnings=report.warnings,
+                        error=str(exc),
                     )
-                    logger.error("job_failed", job_id=request.job_id, error=report.fatal_failure)
-
-            except asyncio.CancelledError:
-                break
-            except Exception as exc:
-                elapsed = time.monotonic() - start_time
-                store.update_job_status(
-                    conn,
-                    request.job_id,
-                    "FAILED",
-                    "FINISHED",
-                    elapsed=elapsed,
-                    error=str(exc),
-                )
+                finally:
+                    conn.close()
                 logger.error("job_exception", job_id=request.job_id, error=str(exc))
             finally:
                 self._active_jobs.discard(request.job_id)
@@ -148,8 +169,8 @@ class JobQueue:
 _queue_instance: JobQueue | None = None
 
 
-def get_job_queue(db_path: Path) -> JobQueue:
+def get_job_queue(db_url: str) -> JobQueue:
     global _queue_instance
     if _queue_instance is None:
-        _queue_instance = JobQueue(db_path)
+        _queue_instance = JobQueue(db_url)
     return _queue_instance

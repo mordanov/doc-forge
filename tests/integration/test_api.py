@@ -1,5 +1,6 @@
 """HTTP API integration tests using httpx.AsyncClient."""
 
+import os
 from pathlib import Path
 
 import httpx
@@ -11,42 +12,45 @@ from docforge.server.app import create_app
 from docforge.server.auth import hash_password
 
 SAMPLE_GUIDE = Path(__file__).parents[2] / "examples" / "sample-guide.docx"
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+pytestmark = pytest.mark.skipif(
+    not DATABASE_URL,
+    reason="DATABASE_URL not set — skipping PostgreSQL integration tests",
+)
 
 
 @pytest.fixture
 def app_dirs(tmp_path):
-    db_path = tmp_path / "test.db"
     upload_dir = tmp_path / "uploads"
     output_dir = tmp_path / "output"
     upload_dir.mkdir()
     output_dir.mkdir()
-    return db_path, upload_dir, output_dir
+    return upload_dir, output_dir
 
 
 @pytest.fixture
 def app_with_user(app_dirs):
-    db_path, upload_dir, output_dir = app_dirs
-    store.init_db(db_path)
-    conn = store.get_connection(db_path)
-    store.upsert_user(conn, "admin", hash_password("secret123"))
+    upload_dir, output_dir = app_dirs
+    store.init_db(DATABASE_URL)
+    conn = store.get_connection(DATABASE_URL)
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM projects")
+                cur.execute("DELETE FROM jobs")
+                cur.execute("DELETE FROM user_accounts")
+        store.upsert_user(conn, "admin", hash_password("secret123"))
+    finally:
+        conn.close()
 
     app = create_app(
-        db_path=db_path,
+        db_url=DATABASE_URL,
         upload_dir=upload_dir,
         output_dir=output_dir,
         secret_key="test-secret-key-32chars-minimum!!",
         token_ttl_hours=1,
     )
-    return app, db_path, upload_dir, output_dir
-
-
-@pytest.fixture
-def client(app_with_user):
-    app, *_ = app_with_user
-    return httpx.Client(
-        transport=httpx.WSGITransport(app=app),
-        base_url="http://testserver",
-    )
+    return app, DATABASE_URL, upload_dir, output_dir
 
 
 @pytest.mark.asyncio
@@ -108,15 +112,6 @@ async def test_login_invalid_credentials(app_with_user):
     ) as client:
         resp = await client.post("/auth/login", json={"username": "admin", "password": "wrongpass"})
     assert resp.status_code == 401
-
-
-@pytest.mark.asyncio
-async def _get_token(app) -> str:
-    async with AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://testserver"
-    ) as client:
-        resp = await client.post("/auth/login", json={"username": "admin", "password": "secret123"})
-    return resp.json()["access_token"]
 
 
 async def _login(client: AsyncClient) -> str:

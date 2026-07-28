@@ -65,7 +65,7 @@ async def submit_job(body: JobSubmitRequest, request: Request) -> dict:
         creativity=body.creativity,
     )
 
-    queue = get_job_queue(Path(request.app.state.db_path))
+    queue = get_job_queue(request.app.state.db_url)
     await queue.submit(job_req)
 
     return {"job_id": job_id, "status": "QUEUED"}
@@ -74,8 +74,11 @@ async def submit_job(body: JobSubmitRequest, request: Request) -> dict:
 @router.get("/{job_id}")
 async def get_job(job_id: str, request: Request) -> dict:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    job = store.get_job(conn, job_id)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        job = store.get_job(conn, job_id)
+    finally:
+        conn.close()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return dict(job)
@@ -88,8 +91,11 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     if fmt != "docx":
         raise HTTPException(status_code=400, detail="Only 'docx' format is supported in v1")
 
-    conn = store.get_connection(Path(request.app.state.db_path))
-    job = store.get_job(conn, job_id)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        job = store.get_job(conn, job_id)
+    finally:
+        conn.close()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if job["status"] != "COMPLETED":
@@ -115,15 +121,16 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_job(job_id: str, request: Request) -> Response:
     _auth_check(request)
-    conn = store.get_connection(Path(request.app.state.db_path))
-    job = store.get_job(conn, job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    if job["status"] == "RUNNING":
-        raise HTTPException(status_code=409, detail="Cannot delete a running job")
-
-    store.delete_job(conn, job_id)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        job = store.get_job(conn, job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        if job["status"] == "RUNNING":
+            raise HTTPException(status_code=409, detail="Cannot delete a running job")
+        store.delete_job(conn, job_id)
+    finally:
+        conn.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import APIRouter, HTTPException, Request, status
 
 from docforge.server import store
@@ -14,8 +12,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, request: Request) -> TokenResponse:
-    conn = store.get_connection(Path(request.app.state.db_path))
-    user = store.get_user(conn)
+    conn = store.get_connection(request.app.state.db_url)
+    try:
+        user = store.get_user(conn)
+    finally:
+        conn.close()
 
     if not user:
         raise HTTPException(status_code=503, detail="Server not initialised — run `docforge init`")

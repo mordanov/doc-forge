@@ -1,17 +1,18 @@
-"""SQLite database setup and CRUD operations."""
+"""PostgreSQL database setup and CRUD operations."""
 
 from __future__ import annotations
 
 import json
-import sqlite3
 import uuid
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
+
+import psycopg2
+import psycopg2.extras
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS user_accounts (
-    id            INTEGER PRIMARY KEY,
+    id            SERIAL PRIMARY KEY,
     username      TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at    TEXT NOT NULL
@@ -53,17 +54,19 @@ CREATE TABLE IF NOT EXISTS projects (
 """
 
 
-def init_db(db_path: Path) -> None:
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(db_path) as conn:
-        conn.executescript(_DDL)
-        conn.commit()
+def init_db(db_url: str) -> None:
+    conn = psycopg2.connect(db_url)
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(_DDL)
+    finally:
+        conn.close()
 
 
-def get_connection(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
+def get_connection(db_url: str) -> psycopg2.extensions.connection:
+    conn = psycopg2.connect(db_url)
+    psycopg2.extras.register_default_jsonb(conn)
     return conn
 
 
@@ -76,17 +79,26 @@ def _now() -> str:
 # ---------------------------------------------------------------------------
 
 
-def upsert_user(conn: sqlite3.Connection, username: str, password_hash: str) -> None:
-    conn.execute(
-        "INSERT OR REPLACE INTO user_accounts (id, username, password_hash, created_at) "
-        "VALUES (1, ?, ?, ?)",
-        (username, password_hash, _now()),
-    )
-    conn.commit()
+def upsert_user(conn: psycopg2.extensions.connection, username: str, password_hash: str) -> None:
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_accounts (id, username, password_hash, created_at)
+                VALUES (1, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE
+                  SET username = EXCLUDED.username,
+                      password_hash = EXCLUDED.password_hash,
+                      created_at = EXCLUDED.created_at
+                """,
+                (username, password_hash, _now()),
+            )
 
 
-def get_user(conn: sqlite3.Connection) -> dict | None:
-    row = conn.execute("SELECT * FROM user_accounts WHERE id = 1").fetchone()
+def get_user(conn: psycopg2.extensions.connection) -> dict | None:
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM user_accounts WHERE id = 1")
+        row = cur.fetchone()
     return dict(row) if row else None
 
 
@@ -96,19 +108,27 @@ def get_user(conn: sqlite3.Connection) -> dict | None:
 
 
 def insert_job(
-    conn: sqlite3.Connection, job_id: str, input_filename: str, input_path: str, config: dict
+    conn: psycopg2.extensions.connection,
+    job_id: str,
+    input_filename: str,
+    input_path: str,
+    config: dict,
 ) -> None:
-    conn.execute(
-        "INSERT INTO jobs (id, status, stage, progress, elapsed_seconds, config_snapshot, "
-        "input_filename, input_path, output_paths, warnings, created_at) "
-        "VALUES (?, 'QUEUED', 'UPLOADING', 0, 0, ?, ?, ?, '[]', '[]', ?)",
-        (job_id, json.dumps(config), input_filename, input_path, _now()),
-    )
-    conn.commit()
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO jobs
+                  (id, status, stage, progress, elapsed_seconds, config_snapshot,
+                   input_filename, input_path, output_paths, warnings, created_at)
+                VALUES (%s, 'QUEUED', 'UPLOADING', 0, 0, %s, %s, %s, '[]', '[]', %s)
+                """,
+                (job_id, json.dumps(config), input_filename, input_path, _now()),
+            )
 
 
 def update_job_status(
-    conn: sqlite3.Connection,
+    conn: psycopg2.extensions.connection,
     job_id: str,
     status: str,
     stage: str,
@@ -118,39 +138,43 @@ def update_job_status(
     output_paths: list[str] | None = None,
     warnings: list[str] | None = None,
 ) -> None:
-    fields = "status = ?, stage = ?, progress = ?, elapsed_seconds = ?"
+    parts: list[str] = ["status = %s", "stage = %s", "progress = %s", "elapsed_seconds = %s"]
     params: list[Any] = [status, stage, progress, elapsed]
 
     if status == "RUNNING" and not error:
-        fields += ", started_at = COALESCE(started_at, ?)"
+        parts.append("started_at = COALESCE(started_at, %s)")
         params.append(_now())
     if status in ("COMPLETED", "FAILED", "CANCELLED"):
-        fields += ", completed_at = ?"
+        parts.append("completed_at = %s")
         params.append(_now())
     if error is not None:
-        fields += ", error = ?"
+        parts.append("error = %s")
         params.append(error)
     if output_paths is not None:
-        fields += ", output_paths = ?"
+        parts.append("output_paths = %s")
         params.append(json.dumps(output_paths))
     if warnings is not None:
-        fields += ", warnings = ?"
+        parts.append("warnings = %s")
         params.append(json.dumps(warnings))
 
     params.append(job_id)
-    conn.execute(f"UPDATE jobs SET {fields} WHERE id = ?", params)  # nosec B608
-    conn.commit()
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(f"UPDATE jobs SET {', '.join(parts)} WHERE id = %s", params)  # nosec B608
 
 
-def get_job(conn: sqlite3.Connection, job_id: str) -> dict | None:
-    row = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+def get_job(conn: psycopg2.extensions.connection, job_id: str) -> dict | None:
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
+        row = cur.fetchone()
     return dict(row) if row else None
 
 
-def delete_job(conn: sqlite3.Connection, job_id: str) -> bool:
-    cur = conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
-    conn.commit()
-    return cur.rowcount > 0
+def delete_job(conn: psycopg2.extensions.connection, job_id: str) -> bool:
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM jobs WHERE id = %s", (job_id,))
+            return cur.rowcount > 0
 
 
 # ---------------------------------------------------------------------------
@@ -159,7 +183,7 @@ def delete_job(conn: sqlite3.Connection, job_id: str) -> bool:
 
 
 def insert_project(
-    conn: sqlite3.Connection,
+    conn: psycopg2.extensions.connection,
     name: str,
     job_id: str,
     input_filename: str,
@@ -171,43 +195,53 @@ def insert_project(
     status: str = "COMPLETED",
 ) -> str:
     project_id = str(uuid.uuid4())
-    conn.execute(
-        "INSERT INTO projects (id, name, job_id, input_filename, config_snapshot, "
-        "output_paths, template, language, ai_model, status, created_at, completed_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            project_id,
-            name,
-            job_id,
-            input_filename,
-            json.dumps(config),
-            json.dumps(output_paths),
-            template,
-            language,
-            ai_model,
-            status,
-            _now(),
-            _now(),
-        ),
-    )
-    conn.commit()
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO projects
+                  (id, name, job_id, input_filename, config_snapshot,
+                   output_paths, template, language, ai_model, status, created_at, completed_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    project_id,
+                    name,
+                    job_id,
+                    input_filename,
+                    json.dumps(config),
+                    json.dumps(output_paths),
+                    template,
+                    language,
+                    ai_model,
+                    status,
+                    _now(),
+                    _now(),
+                ),
+            )
     return project_id
 
 
-def list_projects(conn: sqlite3.Connection, offset: int = 0, limit: int = 20) -> list[dict]:
-    rows = conn.execute(
-        "SELECT * FROM projects ORDER BY created_at DESC LIMIT ? OFFSET ?",
-        (limit, offset),
-    ).fetchall()
-    return [dict(r) for r in rows]
+def list_projects(
+    conn: psycopg2.extensions.connection, offset: int = 0, limit: int = 20
+) -> list[dict]:
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            "SELECT * FROM projects ORDER BY created_at DESC LIMIT %s OFFSET %s",
+            (limit, offset),
+        )
+        return [dict(r) for r in cur.fetchall()]
 
 
-def get_project(conn: sqlite3.Connection, project_id: str) -> dict | None:
-    row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+def get_project(conn: psycopg2.extensions.connection, project_id: str) -> dict | None:
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM projects WHERE id = %s", (project_id,))
+        row = cur.fetchone()
     return dict(row) if row else None
 
 
-def delete_project(conn: sqlite3.Connection, project_id: str) -> bool:
-    cur = conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
-    conn.commit()
-    return cur.rowcount > 0
+def delete_project(conn: psycopg2.extensions.connection, project_id: str) -> bool:
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM projects WHERE id = %s", (project_id,))
+            return cur.rowcount > 0

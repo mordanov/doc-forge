@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import uuid
 from pathlib import Path
 
@@ -13,31 +14,45 @@ from docforge.server import store
 from docforge.server.app import create_app
 from docforge.server.auth import hash_password
 
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+pytestmark = pytest.mark.skipif(
+    not DATABASE_URL,
+    reason="DATABASE_URL not set — skipping PostgreSQL integration tests",
+)
+
 
 @pytest.fixture
 def app_dirs(tmp_path):
-    db_path = tmp_path / "test.db"
     upload_dir = tmp_path / "uploads"
     output_dir = tmp_path / "output"
     upload_dir.mkdir()
     output_dir.mkdir()
-    return db_path, upload_dir, output_dir
+    return upload_dir, output_dir
 
 
 @pytest.fixture
 def app_with_user(app_dirs):
-    db_path, upload_dir, output_dir = app_dirs
-    store.init_db(db_path)
-    conn = store.get_connection(db_path)
-    store.upsert_user(conn, "admin", hash_password("secret123"))
+    upload_dir, output_dir = app_dirs
+    store.init_db(DATABASE_URL)
+    conn = store.get_connection(DATABASE_URL)
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM projects")
+                cur.execute("DELETE FROM jobs")
+                cur.execute("DELETE FROM user_accounts")
+        store.upsert_user(conn, "admin", hash_password("secret123"))
+    finally:
+        conn.close()
+
     app = create_app(
-        db_path=db_path,
+        db_url=DATABASE_URL,
         upload_dir=upload_dir,
         output_dir=output_dir,
         secret_key="test-secret-key-32chars-minimum!!",
         token_ttl_hours=1,
     )
-    return app, db_path, upload_dir, output_dir
+    return app, DATABASE_URL, upload_dir, output_dir
 
 
 async def _login(client: AsyncClient) -> str:
@@ -99,11 +114,13 @@ async def test_delete_job_not_found(app_with_user):
 
 @pytest.mark.asyncio
 async def test_delete_job_queued(app_with_user):
-    app, db_path, *_ = app_with_user
-    # Insert a QUEUED job directly in the DB
+    app, db_url, *_ = app_with_user
     job_id = str(uuid.uuid4())
-    conn = store.get_connection(Path(db_path))
-    store.insert_job(conn, job_id, "file.docx", "/tmp/file.docx", {})
+    conn = store.get_connection(db_url)
+    try:
+        store.insert_job(conn, job_id, "file.docx", "/tmp/file.docx", {})
+    finally:
+        conn.close()
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
@@ -118,11 +135,14 @@ async def test_delete_job_queued(app_with_user):
 
 @pytest.mark.asyncio
 async def test_delete_running_job_rejected(app_with_user):
-    app, db_path, *_ = app_with_user
+    app, db_url, *_ = app_with_user
     job_id = str(uuid.uuid4())
-    conn = store.get_connection(Path(db_path))
-    store.insert_job(conn, job_id, "file.docx", "/tmp/file.docx", {})
-    store.update_job_status(conn, job_id, "RUNNING", "LOADING")
+    conn = store.get_connection(db_url)
+    try:
+        store.insert_job(conn, job_id, "file.docx", "/tmp/file.docx", {})
+        store.update_job_status(conn, job_id, "RUNNING", "LOADING")
+    finally:
+        conn.close()
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
@@ -151,10 +171,13 @@ async def test_download_job_not_found(app_with_user):
 
 @pytest.mark.asyncio
 async def test_download_job_unsupported_format(app_with_user):
-    app, db_path, *_ = app_with_user
+    app, db_url, *_ = app_with_user
     job_id = str(uuid.uuid4())
-    conn = store.get_connection(Path(db_path))
-    store.insert_job(conn, job_id, "f.docx", "/tmp/f.docx", {})
+    conn = store.get_connection(db_url)
+    try:
+        store.insert_job(conn, job_id, "f.docx", "/tmp/f.docx", {})
+    finally:
+        conn.close()
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
@@ -169,10 +192,13 @@ async def test_download_job_unsupported_format(app_with_user):
 
 @pytest.mark.asyncio
 async def test_download_job_not_completed(app_with_user):
-    app, db_path, *_ = app_with_user
+    app, db_url, *_ = app_with_user
     job_id = str(uuid.uuid4())
-    conn = store.get_connection(Path(db_path))
-    store.insert_job(conn, job_id, "f.docx", "/tmp/f.docx", {})
+    conn = store.get_connection(db_url)
+    try:
+        store.insert_job(conn, job_id, "f.docx", "/tmp/f.docx", {})
+    finally:
+        conn.close()
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
@@ -228,22 +254,24 @@ async def test_delete_project_not_found(app_with_user):
 
 @pytest.mark.asyncio
 async def test_project_crud(app_with_user):
-    app, db_path, upload_dir, _output_dir = app_with_user
-    # Insert a job and project directly
+    app, db_url, upload_dir, _output_dir = app_with_user
     job_id = str(uuid.uuid4())
-    conn = store.get_connection(Path(db_path))
-    store.insert_job(conn, job_id, "f.docx", str(upload_dir / "f.docx"), {})
-    project_id = store.insert_project(
-        conn,
-        name="Test Project",
-        job_id=job_id,
-        input_filename="f.docx",
-        config={},
-        output_paths=[],
-        template="minimal",
-        language="en",
-        ai_model="gpt-4o",
-    )
+    conn = store.get_connection(db_url)
+    try:
+        store.insert_job(conn, job_id, "f.docx", str(upload_dir / "f.docx"), {})
+        project_id = store.insert_project(
+            conn,
+            name="Test Project",
+            job_id=job_id,
+            input_filename="f.docx",
+            config={},
+            output_paths=[],
+            template="minimal",
+            language="en",
+            ai_model="gpt-4o",
+        )
+    finally:
+        conn.close()
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
