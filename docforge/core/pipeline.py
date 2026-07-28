@@ -58,7 +58,7 @@ async def render_pipeline(
 
         # Stage 2: Analyse
         on_stage(RenderStage.ANALYSING, 15, "Analysing document structure")
-        model, issues = analyse(input_path)
+        model, issues = analyse(input_path, extra_placeholder_patterns=[])
         for issue in issues:
             report.add_warning(f"[{issue.code}] {issue.message}")
 

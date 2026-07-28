@@ -29,17 +29,60 @@ from docforge.core.document import (
 )
 from docforge.core.rendering import ValidationIssue
 
-_IMAGE_PLACEHOLDER_RE = re.compile(
+# Inline markers: <image …>, <img …>, [image …], [photo …], [figure …]
+_INLINE_PLACEHOLDER_RE = re.compile(
     r"<image[^>]*>|<img[^>]*>|\[image[^\]]*\]|\[photo[^\]]*\]|\[figure[^\]]*\]",
     re.IGNORECASE,
 )
 
+# Structural markers: standalone lines that label a photo block.
+# These are whole-paragraph patterns — the paragraph text is matched in full.
+_STRUCTURAL_PLACEHOLDER_RE = re.compile(
+    r"""
+    ^\s*(
+        (?:фото|фотография|рис(?:унок)?|фиг(?:ура)?|иллюстрация)   # Russian
+        |(?:photo|figure|fig|illustration|image|picture|pic)        # English/common
+        |(?:foto|abbildung|abb)                                      # German/Spanish
+    )[\s\.\-—:]*\d*\s*$                                             # optional number
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
-def analyse(path: Path) -> tuple[SemanticModel, list[ValidationIssue]]:
+# Поиск / Search prefix — the search-hint paragraph that follows a photo block
+_SEARCH_HINT_RE = re.compile(
+    r"^\s*(поиск|search)\s*[:\-—]?\s*",
+    re.IGNORECASE,
+)
+
+
+def _build_extra_re(patterns: list[str]) -> re.Pattern | None:
+    if not patterns:
+        return None
+    combined = "|".join(f"(?:{p})" for p in patterns)
+    return re.compile(combined, re.IGNORECASE)
+
+
+def _is_placeholder_line(text: str, extra_re: re.Pattern | None) -> bool:
+    """Return True if this paragraph should be treated as an image placeholder marker."""
+    if _INLINE_PLACEHOLDER_RE.search(text):
+        return True
+    if _STRUCTURAL_PLACEHOLDER_RE.match(text):
+        return True
+    if extra_re and extra_re.search(text):
+        return True
+    return False
+
+
+def analyse(
+    path: Path,
+    extra_placeholder_patterns: list[str] | None = None,
+) -> tuple[SemanticModel, list[ValidationIssue]]:
     """Analyse a .docx file without modifying it.
 
     Returns (SemanticModel, list[ValidationIssue]).
     """
+    extra_re = _build_extra_re(extra_placeholder_patterns or [])
+
     doc = docx.Document(str(path))
     doc_id = str(uuid.uuid4())
 
@@ -51,7 +94,13 @@ def analyse(path: Path) -> tuple[SemanticModel, list[ValidationIssue]]:
     table_count = 0
     placeholder_count = 0
     heading_count = 0
-    for block in _iter_blocks(doc):
+
+    # Collect all blocks first so we can do look-ahead coalescing.
+    blocks = list(_iter_blocks(doc))
+    i = 0
+    while i < len(blocks):
+        block = blocks[i]
+
         if isinstance(block, Heading):
             heading_count += 1
             if block.level == 1:
@@ -88,20 +137,53 @@ def analyse(path: Path) -> tuple[SemanticModel, list[ValidationIssue]]:
                     )
                 )
             prev_heading_level = block.level
+            i += 1
 
         elif isinstance(block, Paragraph):
             word_count += len(block.text.split())
-            if _IMAGE_PLACEHOLDER_RE.search(block.text):
+
+            if _is_placeholder_line(block.text, extra_re):
+                # Structural coalescing: consume up to 3 following paragraphs as
+                # caption + search-hint lines (stop at headings or tables).
+                label = block.text.strip()
+                caption_parts: list[str] = []
+                search_hint = ""
+                j = i + 1
+                while j < len(blocks) and j <= i + 3:
+                    nxt = blocks[j]
+                    if not isinstance(nxt, Paragraph) or not nxt.text.strip():
+                        break
+                    # Stop if the next line is itself another placeholder marker
+                    if _is_placeholder_line(nxt.text, extra_re):
+                        break
+                    hint_match = _SEARCH_HINT_RE.match(nxt.text)
+                    if hint_match:
+                        search_hint = nxt.text[hint_match.end():].strip()
+                        j += 1
+                        break
+                    caption_parts.append(nxt.text.strip())
+                    j += 1
+
+                caption = " ".join(caption_parts)
+                context = search_hint or caption or label
+                full_text = label
+                if caption:
+                    full_text += f"\n{caption}"
+                if search_hint:
+                    full_text += f"\nПоиск: {search_hint}"
+
                 placeholder = ImagePlaceholder(
-                    placeholder_text=block.text.strip(),
-                    context_hint=_extract_context_hint(block.text),
+                    placeholder_text=full_text,
+                    context_hint=context[:200],
                 )
                 placeholder_count += 1
                 target = current_chapter or _ensure_intro_chapter(chapters)
                 target.elements.append(placeholder)
+                i = j  # skip consumed lines
             else:
                 target = current_chapter or _ensure_intro_chapter(chapters)
                 target.elements.append(block)
+                i += 1
 
         elif isinstance(block, Table):
             table_count += 1
@@ -115,6 +197,9 @@ def analyse(path: Path) -> tuple[SemanticModel, list[ValidationIssue]]:
                 )
             target = current_chapter or _ensure_intro_chapter(chapters)
             target.elements.append(block)
+            i += 1
+        else:
+            i += 1
 
     page_count_estimate = max(1, word_count // 300)
 
@@ -185,6 +270,3 @@ def _ensure_intro_chapter(chapters: list[Chapter]) -> Chapter:
     return chapters[0]
 
 
-def _extract_context_hint(text: str) -> str:
-    cleaned = _IMAGE_PLACEHOLDER_RE.sub("", text).strip()
-    return cleaned[:200] if cleaned else ""

@@ -28,6 +28,10 @@ class ImagesConfig(BaseSettings):
     density: Literal["minimal", "balanced", "illustrated", "maximum"] = "balanced"
     max_file_size_mb: int = Field(default=15, ge=1, le=100)
     max_retries: int = Field(default=3, ge=1, le=10)
+    # Extra regex patterns (case-insensitive) treated as image placeholder markers.
+    # Matched against the full text of a paragraph. Add patterns here to handle
+    # language- or template-specific conventions (e.g. "Фото \\d+" for Russian docs).
+    extra_placeholder_patterns: list[str] = Field(default_factory=list)
 
     model_config = SettingsConfigDict(env_prefix="DOCFORGE_IMAGES_")
 
