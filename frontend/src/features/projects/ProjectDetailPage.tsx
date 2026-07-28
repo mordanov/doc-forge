@@ -109,15 +109,29 @@ export default function ProjectDetailPage() {
 
         {config && Object.keys(config).length > 0 && (() => {
           const cfg = config as Record<string, string>
+          const rows: { label: string; key: string }[] = [
+            { label: 'Typography', key: 'typography' },
+            { label: 'Cover Page', key: 'cover_page' },
+            { label: 'Table of Contents', key: 'table_of_contents' },
+            { label: 'Headers & Footers', key: 'headers_footers' },
+            { label: 'Image Density', key: 'image_density' },
+            { label: 'Layout Density', key: 'layout_density' },
+            { label: 'Colour Palette', key: 'colour_palette' },
+            { label: 'Sidebar Style', key: 'sidebar_style' },
+            { label: 'Image Policy', key: 'image_policy' },
+            { label: 'Validation Level', key: 'validation_level' },
+          ]
+          const visible = rows.filter((r) => cfg[r.key])
+          if (visible.length === 0) return null
           return (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Configuration</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                {cfg.imageDensity && <Row label="Image Density" value={cfg.imageDensity} />}
-                {cfg.layoutDensity && <Row label="Layout Density" value={cfg.layoutDensity} />}
-                {cfg.typography && <Row label="Typography" value={cfg.typography} />}
+                {visible.map((r) => (
+                  <Row key={r.key} label={r.label} value={cfg[r.key]} />
+                ))}
               </CardContent>
             </Card>
           )
