@@ -57,12 +57,11 @@ def export(
     language: str = "en",
 ) -> Path:
     try:
-        import ebooklib
         from ebooklib import epub
-    except ImportError:
+    except ImportError as err:
         raise RuntimeError(
             "ebooklib is required for EPUB export. Install with: pip install EbookLib"
-        )
+        ) from err
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -101,7 +100,7 @@ def export(
     book.toc = tuple(epub.Link(ch.file_name, ch.title, ch.id) for ch in chapters_epub)
     book.add_item(epub.EpubNcx())
     book.add_item(epub.EpubNav())
-    book.spine = ["nav"] + chapters_epub
+    book.spine = ["nav", *chapters_epub]
 
     epub.write_epub(str(output_path), book)
     logger.info("epub_exported", path=str(output_path), size=output_path.stat().st_size)

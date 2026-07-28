@@ -87,6 +87,11 @@ export interface JobEstimate {
   estimated_ai_cost_usd: number
   estimated_page_count: number
   image_placeholder_count: number
+  generated_captions: number
+  generated_appendix: boolean
+  has_cover_page: boolean
+  has_toc: boolean
+  has_headers_footers: boolean
   validation_summary: {
     warnings: string[]
     errors: string[]

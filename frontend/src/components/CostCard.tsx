@@ -1,7 +1,7 @@
 import type { JobEstimate } from '@/types/api'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { StatisticsCard } from './StatisticsCard'
-import { Clock, Brain, Image, FileText, DollarSign } from 'lucide-react'
+import { Clock, Brain, Image, FileText, DollarSign, BookOpen, ListOrdered, LayoutTemplate, MessageSquare } from 'lucide-react'
 import { formatDuration } from '@/lib/utils'
 import { useT } from '@/hooks/useT'
 
@@ -56,6 +56,26 @@ export function CostCard({ estimate, loading }: CostCardProps) {
           label="Pages"
           value={estimate.estimated_page_count}
           icon={FileText}
+        />
+        <StatisticsCard
+          label="Captions"
+          value={estimate.generated_captions}
+          icon={MessageSquare}
+        />
+        <StatisticsCard
+          label="Appendix"
+          value={estimate.generated_appendix ? 'Yes' : 'No'}
+          icon={BookOpen}
+        />
+        <StatisticsCard
+          label="Cover page"
+          value={estimate.has_cover_page ? 'Yes' : 'No'}
+          icon={LayoutTemplate}
+        />
+        <StatisticsCard
+          label="Table of contents"
+          value={estimate.has_toc ? 'Yes' : 'No'}
+          icon={ListOrdered}
         />
       </CardContent>
     </Card>

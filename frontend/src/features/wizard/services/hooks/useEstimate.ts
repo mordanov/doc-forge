@@ -7,7 +7,16 @@ export function useEstimate() {
   const setEstimate = useWizardStore((s) => s.setEstimate)
 
   return useQuery({
-    queryKey: ['estimate', draft.documentId, draft.template, draft.language, draft.aiModel],
+    queryKey: [
+      'estimate',
+      draft.documentId,
+      draft.template,
+      draft.language,
+      draft.aiModel,
+      draft.coverPage,
+      draft.tableOfContents,
+      draft.headersFooters,
+    ],
     queryFn: async () => {
       const est = await getEstimate({
         document_id: draft.documentId!,
@@ -15,6 +24,11 @@ export function useEstimate() {
         language: draft.language,
         ai_model: draft.aiModel,
         creativity: draft.creativity,
+        config: {
+          coverPage: draft.coverPage,
+          tableOfContents: draft.tableOfContents,
+          headersFooters: draft.headersFooters,
+        },
       })
       setEstimate(est)
       return est

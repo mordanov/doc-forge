@@ -31,6 +31,7 @@ class JobSubmitRequest(BaseModel):
 class EstimateRequest(BaseModel):
     document_id: str
     template: str = "minimal"
+    config: dict = {}
 
 
 def _auth_check(request: Request) -> None:
@@ -100,7 +101,10 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     _auth_check(request)
 
     if fmt not in _SUPPORTED_FORMATS:
-        raise HTTPException(status_code=400, detail=f"Unsupported format '{fmt}'. Use: {', '.join(_SUPPORTED_FORMATS)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported format '{fmt}'. Use: {', '.join(_SUPPORTED_FORMATS)}",
+        )
 
     conn = store.get_connection(request.app.state.db_url)
     try:
@@ -131,12 +135,14 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
         final_path = output_dir / f"{job_id}.pdf"
         if not final_path.exists():
             from docforge.exporters import pdf as pdf_exporter
+
             pdf_exporter.export(docx_path, final_path)
     elif fmt == "html":
         final_path = output_dir / f"{job_id}.html"
         if not final_path.exists():
             from docforge.document.analyser import analyse
             from docforge.exporters import html as html_exporter
+
             model, _ = analyse(Path(job.get("input_path", str(docx_path))))
             html_exporter.export(model, final_path, language=job.get("language", "en"))
     elif fmt == "markdown":
@@ -144,6 +150,7 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
         if not final_path.exists():
             from docforge.document.analyser import analyse
             from docforge.exporters import markdown as md_exporter
+
             model, _ = analyse(Path(job.get("input_path", str(docx_path))))
             md_exporter.export(model, final_path, language=job.get("language", "en"))
     elif fmt == "epub":
@@ -151,6 +158,7 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
         if not final_path.exists():
             from docforge.document.analyser import analyse
             from docforge.exporters import epub as epub_exporter
+
             model, _ = analyse(Path(job.get("input_path", str(docx_path))))
             epub_exporter.export(model, final_path, language=job.get("language", "en"))
     else:
@@ -202,6 +210,18 @@ async def estimate_job(body: EstimateRequest, request: Request) -> dict:
     # assume ~80% input, ~20% output
     cost_usd = round(ai_tokens * 0.8 * 2.50 / 1_000_000 + ai_tokens * 0.2 * 10.00 / 1_000_000, 4)
 
+    # Derive structural features from config hints passed in the estimate body
+    cfg = getattr(body, "config", {}) or {}
+    cover_page = cfg.get("coverPage", "auto")
+    toc = cfg.get("tableOfContents", "generate")
+    headers_footers = cfg.get("headersFooters", "generate")
+
+    has_cover_page = cover_page not in ("none",)
+    has_toc = toc in ("generate", "update_existing")
+    has_headers_footers = headers_footers in ("generate", "replace_existing")
+    generated_captions = stats.placeholder_count
+    generated_appendix = stats.placeholder_count > 0
+
     return {
         "estimated_rendering_seconds": max(10, stats.chapter_count * 5),
         "estimated_ai_tokens": ai_tokens,
@@ -209,6 +229,11 @@ async def estimate_job(body: EstimateRequest, request: Request) -> dict:
         "estimated_ai_cost_usd": cost_usd,
         "estimated_page_count": stats.page_count_estimate,
         "image_placeholder_count": stats.placeholder_count,
+        "generated_captions": generated_captions,
+        "generated_appendix": generated_appendix,
+        "has_cover_page": has_cover_page,
+        "has_toc": has_toc,
+        "has_headers_footers": has_headers_footers,
         "validation_summary": {"warnings": [], "errors": []},
         "licence_summary": {
             "providers_available": ["wikimedia"],

@@ -28,15 +28,15 @@ logger = get_logger(__name__)
 # Typography tables: variant → (body_size_delta, line_spacing, spacing_before, spacing_after, body_font_override)
 # ---------------------------------------------------------------------------
 _TYPOGRAPHY: dict[str, tuple[float, float, int, int, str | None]] = {
-    "conservative": (0,    1.15, 6,  6,  None),
-    "editorial":    (0.5,  1.5,  8,  8,  None),
-    "magazine":     (0,    1.15, 4,  4,  "Calibri"),
-    "luxury":       (1,    1.35, 10, 10, None),
+    "conservative": (0, 1.15, 6, 6, None),
+    "editorial": (0.5, 1.5, 8, 8, None),
+    "magazine": (0, 1.15, 4, 4, "Calibri"),
+    "luxury": (1, 1.35, 10, 10, None),
 }
 
 _PAGE_BALANCE_SPACING: dict[str, tuple[int, int]] = {
-    "tight":    (3,  3),
-    "balanced": (6,  6),
+    "tight": (3, 3),
+    "balanced": (6, 6),
     "spacious": (12, 12),
 }
 
@@ -93,18 +93,18 @@ class RenderingEngine:
     def _apply_page_setup(self, doc: Any) -> None:
         spacing = self._theme.get("spacing", {})
         for section in doc.sections:
-            section.top_margin    = Cm(spacing.get("page_margin_top_cm",    2.54))
+            section.top_margin = Cm(spacing.get("page_margin_top_cm", 2.54))
             section.bottom_margin = Cm(spacing.get("page_margin_bottom_cm", 2.54))
-            section.left_margin   = Cm(spacing.get("page_margin_left_cm",   2.54))
-            section.right_margin  = Cm(spacing.get("page_margin_right_cm",  2.54))
+            section.left_margin = Cm(spacing.get("page_margin_left_cm", 2.54))
+            section.right_margin = Cm(spacing.get("page_margin_right_cm", 2.54))
 
     # ------------------------------------------------------------------
     # Cover + TOC
     # ------------------------------------------------------------------
 
     def _add_cover(self, doc: Any, model: SemanticModel, language: str) -> None:
-        palette  = self._theme.get("palette", {})
-        title    = model.chapters[0].title if model.chapters else "Document"
+        palette = self._theme.get("palette", {})
+        title = model.chapters[0].title if model.chapters else "Document"
 
         para = doc.add_paragraph()
         para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -117,6 +117,7 @@ class RenderingEngine:
 
     def _add_toc(self, doc: Any, model: SemanticModel, language: str) -> None:
         from docforge.core.i18n import get_label
+
         toc_label = get_label("toc", language)
         doc.add_heading(toc_label, level=1)
         for chapter in model.chapters:
@@ -136,15 +137,15 @@ class RenderingEngine:
         image_map: dict[int, Path],
         attr_by_ph: dict[int, dict] | None = None,
     ) -> None:
-        palette   = self._theme.get("palette", {})
+        palette = self._theme.get("palette", {})
         typography = self._theme.get("typography", {})
 
-        chapter_style      = decision.chapter_style      if decision else ChapterStyle.STANDARD
+        chapter_style = decision.chapter_style if decision else ChapterStyle.STANDARD
         typography_variant = decision.typography_variant if decision else "conservative"
-        page_balance       = decision.page_balance       if decision else PageBalance.BALANCED
-        heading_colour     = decision.heading_colour     if decision else None
-        pull_quote_flag    = decision.pull_quote         if decision else False
-        sidebar_decision   = decision.sidebar            if decision else None
+        page_balance = decision.page_balance if decision else PageBalance.BALANCED
+        heading_colour = decision.heading_colour if decision else None
+        pull_quote_flag = decision.pull_quote if decision else False
+        sidebar_decision = decision.sidebar if decision else None
 
         # Resolved typography params
         ty = _TYPOGRAPHY.get(str(typography_variant), _TYPOGRAPHY["conservative"])
@@ -152,7 +153,7 @@ class RenderingEngine:
 
         balance_sp = _PAGE_BALANCE_SPACING.get(str(page_balance), (6, 6))
         sp_before = balance_sp[0]
-        sp_after  = balance_sp[1]
+        sp_after = balance_sp[1]
 
         base_body_size = typography.get("body_size", 11)
         body_size = base_body_size + body_size_delta
@@ -196,24 +197,20 @@ class RenderingEngine:
         for element in chapter.elements:
             if isinstance(element, Heading):
                 h = doc.add_heading(element.text, level=element.level)
-                h.runs[0].font.name = heading_font if h.runs else heading_font
+                h.runs[0].font.name = heading_font
 
             elif isinstance(element, Paragraph):
                 if not element.text.strip():
                     continue
 
                 # Insert pull quote once for the first paragraph with ≥ 40 words
-                if (
-                    pull_quote_flag
-                    and not pull_quote_added
-                    and len(element.text.split()) >= 40
-                ):
+                if pull_quote_flag and not pull_quote_added and len(element.text.split()) >= 40:
                     self._add_pull_quote(doc, element.text, palette, body_font)
                     pull_quote_added = True
 
                 p = doc.add_paragraph()
                 p.paragraph_format.space_before = Pt(sp_before)
-                p.paragraph_format.space_after  = Pt(sp_after)
+                p.paragraph_format.space_after = Pt(sp_after)
                 p.paragraph_format.line_spacing = line_spacing
 
                 run = p.add_run(element.text)
@@ -222,6 +219,7 @@ class RenderingEngine:
 
                 if element.style:
                     import contextlib
+
                     with contextlib.suppress(KeyError):
                         p.style = doc.styles[element.style]
 
@@ -239,16 +237,17 @@ class RenderingEngine:
     def _add_rule(self, doc: Any, colour_hex: str) -> None:
         """Thin horizontal rule paragraph (via bottom border on empty paragraph)."""
         from docx.oxml import OxmlElement
+
         para = doc.add_paragraph()
-        pPr = para._p.get_or_add_pPr()
-        pBdr = OxmlElement("w:pBdr")
+        p_pr = para._p.get_or_add_pPr()
+        p_bdr = OxmlElement("w:pBdr")
         bottom = OxmlElement("w:bottom")
         bottom.set(qn("w:val"), "single")
         bottom.set(qn("w:sz"), "6")
         bottom.set(qn("w:space"), "1")
         bottom.set(qn("w:color"), colour_hex.lstrip("#"))
-        pBdr.append(bottom)
-        pPr.append(pBdr)
+        p_bdr.append(bottom)
+        p_pr.append(p_bdr)
 
     def _add_pull_quote(self, doc: Any, text: str, palette: dict, body_font: str) -> None:
         """Blockquote-style pull quote — first sentence, large italic, indented."""
@@ -256,10 +255,10 @@ class RenderingEngine:
         if not sentence:
             return
         para = doc.add_paragraph()
-        para.paragraph_format.left_indent  = Cm(1.5)
+        para.paragraph_format.left_indent = Cm(1.5)
         para.paragraph_format.right_indent = Cm(1.5)
         para.paragraph_format.space_before = Pt(12)
-        para.paragraph_format.space_after  = Pt(12)
+        para.paragraph_format.space_after = Pt(12)
         run = para.add_run(f"“{sentence}.”")
         run.italic = True
         run.font.size = Pt(14)
@@ -273,12 +272,12 @@ class RenderingEngine:
         snippet = (text.split(".")[0].strip() + ".")[:120]
         table = doc.add_table(rows=1, cols=2)
         table.style = "Table Grid"
-        left_cell  = table.cell(0, 0)
+        left_cell = table.cell(0, 0)
         right_cell = table.cell(0, 1)
 
         # Make right cell narrow (sidebar)
         right_cell.width = Cm(4)
-        left_cell.paragraphs[0].text = ""   # filled by caller's body elements
+        left_cell.paragraphs[0].text = ""  # filled by caller's body elements
         sp = right_cell.paragraphs[0]
         run = sp.add_run(snippet)
         run.italic = True
@@ -286,6 +285,7 @@ class RenderingEngine:
 
         # Light background on sidebar cell
         from docx.oxml import OxmlElement
+
         tc_pr = right_cell._tc.get_or_add_tcPr()
         shd = OxmlElement("w:shd")
         shd.set(qn("w:val"), "clear")
@@ -328,7 +328,9 @@ class RenderingEngine:
                 last_para = doc.paragraphs[-1]
                 last_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 # Caption
-                caption_text = placeholder.context_hint or placeholder.placeholder_text.split("\n")[0]
+                caption_text = (
+                    placeholder.context_hint or placeholder.placeholder_text.split("\n")[0]
+                )
                 if attribution:
                     author = attribution.get("author") or ""
                     licence = attribution.get("licence") or ""
@@ -363,6 +365,7 @@ class RenderingEngine:
         attributions: list[dict] | None = None,
     ) -> None:
         from docforge.core.i18n import get_label
+
         appendix_label = get_label("image_sources", language)
         doc.add_page_break()
         doc.add_heading(appendix_label, level=1)

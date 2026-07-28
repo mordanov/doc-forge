@@ -60,7 +60,9 @@ def _render_chapter(chapter: Chapter) -> str:
             parts.append("</table>")
         elif isinstance(el, ImagePlaceholder):
             hint = _h(el.context_hint or el.placeholder_text.split("\n")[0])
-            parts.append(f'<figure><div class="placeholder">[Image: {hint}]</div><figcaption>{hint}</figcaption></figure>')
+            parts.append(
+                f'<figure><div class="placeholder">[Image: {hint}]</div><figcaption>{hint}</figcaption></figure>'
+            )
 
     parts.append("</section>")
     return "\n".join(parts)

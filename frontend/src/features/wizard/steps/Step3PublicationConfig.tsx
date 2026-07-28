@@ -149,8 +149,14 @@ export function Step3PublicationConfig() {
           <Select value={draft.coverPage} onValueChange={(v) => setPublicationConfig({ coverPage: v })}>
             <SelectTrigger id="cover-page"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {['none', 'simple', 'standard', 'full'].map((v) => (
-                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              {[
+                { value: 'auto', label: 'Auto' },
+                { value: 'photo', label: 'Photo' },
+                { value: 'minimal', label: 'Minimal' },
+                { value: 'illustration', label: 'Illustration' },
+                { value: 'none', label: 'None' },
+              ].map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -165,8 +171,12 @@ export function Step3PublicationConfig() {
           <Select value={draft.tableOfContents} onValueChange={(v) => setPublicationConfig({ tableOfContents: v })}>
             <SelectTrigger id="toc"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {['none', 'simple', 'standard', 'detailed'].map((v) => (
-                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              {[
+                { value: 'generate', label: 'Generate' },
+                { value: 'update_existing', label: 'Update Existing' },
+                { value: 'keep_existing', label: 'Keep Existing' },
+              ].map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -181,8 +191,12 @@ export function Step3PublicationConfig() {
           <Select value={draft.headersFooters} onValueChange={(v) => setPublicationConfig({ headersFooters: v })}>
             <SelectTrigger id="headers-footers"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {['none', 'minimal', 'standard', 'full'].map((v) => (
-                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              {[
+                { value: 'generate', label: 'Generate' },
+                { value: 'replace_existing', label: 'Replace Existing' },
+                { value: 'keep_existing', label: 'Keep Existing' },
+              ].map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>

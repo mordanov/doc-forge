@@ -16,7 +16,8 @@ def export(docx_path: Path, output_path: Path) -> Path:
 
     # Try docx2pdf first (cross-platform, uses Word on macOS/Windows)
     try:
-        from docx2pdf import convert  # type: ignore[import]
+        from docx2pdf import convert
+
         convert(str(docx_path), str(output_path))
         logger.info("pdf_exported_docx2pdf", path=str(output_path))
         return output_path
