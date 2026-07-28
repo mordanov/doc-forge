@@ -10,7 +10,8 @@ from docforge.ai.base import AIContext
 from docforge.ai.cache import AIResponseCache
 from docforge.ai.defaults import DefaultRenderingDecision
 from docforge.ai.prompts.loader import load_prompt
-from docforge.core.rendering import RenderingDecision, RenderStage
+from docforge.core.document import ImagePlaceholder
+from docforge.core.rendering import PhotoLayout, RenderingDecision, RenderStage
 from docforge.document.analyser import analyse
 from docforge.document.loader import load_document
 from docforge.exporters import docx as docx_exporter
@@ -170,11 +171,74 @@ async def render_pipeline(
         if ai_provider is not None:
             logger.info("pipeline_ai_done", chapters_processed=len(decisions))
 
-        # Stage 5: Render
-        on_stage(RenderStage.RENDERING, 70, "Rendering document")
+        # Stage 5: Image search & download
+        images_dir = output_path.parent / f"{output_path.stem}_images"
+        fetched_images: dict[str, Path] = {}
+        try:
+            from docforge.images.wikimedia import WikimediaProvider
+
+            image_provider = WikimediaProvider()
+            placeholders = [
+                (chapter, el)
+                for chapter in model.chapters
+                for el in chapter.elements
+                if isinstance(el, ImagePlaceholder)
+            ]
+            total_placeholders = len(placeholders)
+            if total_placeholders > 0:
+                on_stage(RenderStage.SEARCHING_IMAGES, 72, f"Searching images (0/{total_placeholders})")
+                logger.info("pipeline_image_search_start", total=total_placeholders)
+                for idx, (chapter, placeholder) in enumerate(placeholders):
+                    decision = decisions.get(chapter.id)
+                    if decision and decision.photo_layout == PhotoLayout.NONE:
+                        continue
+                    query = placeholder.context_hint or placeholder.placeholder_text.split("\n")[0]
+                    on_stage(
+                        RenderStage.SEARCHING_IMAGES,
+                        72 + int(3 * idx / total_placeholders),
+                        f"Searching images ({idx + 1}/{total_placeholders})",
+                    )
+                    try:
+                        candidates = await image_provider.search(query, max_results=1)
+                        if candidates:
+                            fetched_images[id(placeholder)] = candidates[0]  # type: ignore[assignment]
+                    except Exception as exc:
+                        logger.warning("pipeline_image_search_failed", query=query, error=str(exc))
+
+                logger.info("pipeline_image_search_done", found=len(fetched_images), total=total_placeholders)
+
+                if fetched_images:
+                    on_stage(RenderStage.DOWNLOADING_IMAGES, 75, f"Downloading images (0/{len(fetched_images)})")
+                    images_dir.mkdir(parents=True, exist_ok=True)
+                    downloaded: dict[int, Path] = {}
+                    for dl_idx, (ph_id, candidate) in enumerate(fetched_images.items()):
+                        on_stage(
+                            RenderStage.DOWNLOADING_IMAGES,
+                            75 + int(5 * dl_idx / len(fetched_images)),
+                            f"Downloading images ({dl_idx + 1}/{len(fetched_images)})",
+                        )
+                        try:
+                            ext = candidate.url.rsplit(".", 1)[-1].split("?")[0].lower() or "jpg"  # type: ignore[union-attr]
+                            raw_path = images_dir / f"img_{dl_idx:03d}_raw.{ext}"
+                            opt_path = images_dir / f"img_{dl_idx:03d}.jpg"
+                            await image_provider.download(candidate, raw_path)  # type: ignore[arg-type]
+                            from docforge.images.optimiser import optimise
+                            optimise(raw_path, opt_path, max_width=1200, max_height=900)
+                            raw_path.unlink(missing_ok=True)
+                            downloaded[int(ph_id)] = opt_path
+                            report.add_image_attribution(candidate)  # type: ignore[arg-type]
+                        except Exception as exc:
+                            logger.warning("pipeline_image_download_failed", error=str(exc))
+                    fetched_images = downloaded  # type: ignore[assignment]
+                    logger.info("pipeline_image_download_done", downloaded=len(downloaded))
+        except Exception as exc:
+            logger.warning("pipeline_image_stage_failed", error=str(exc))
+
+        # Stage 6: Render
+        on_stage(RenderStage.RENDERING, 80, "Rendering document")
         theme = load_theme(template)
         engine = RenderingEngine(theme)
-        doc = engine.render(model, decisions, output_path, language=language)
+        doc = engine.render(model, decisions, output_path, language=language, images=fetched_images)
 
         # Stage 6: Export with metadata
         on_stage(RenderStage.EXPORT, 90, "Exporting DOCX")

@@ -177,6 +177,20 @@ const en = {
     parallelDownloads: 'Parallel Downloads',
     retryCount: 'Retry Count',
     timeout: 'Timeout (s)',
+    hints: {
+      preset: 'A preset combines all settings below into a ready-made configuration for a specific document type.',
+      theme: 'The visual template that controls fonts, colours, and page layout of the output document.',
+      language: 'The language used for generated captions, section headings, and table of contents.',
+      outputFormats: 'Choose one or more file formats for the final document. DOCX is always available.',
+      imageDensity: 'Controls how many images are inserted. Minimal adds very few; Maximum fills every available placeholder.',
+      layoutDensity: 'Controls whitespace and margins. Compact is tighter; Spacious adds breathing room between sections.',
+      colourPalette: 'The colour scheme applied to headings, dividers, and highlights throughout the document.',
+      validationLevel: 'Fast skips optional checks. Strict enforces all structural and formatting rules.',
+      offlineMode: 'When enabled, only resources already cached locally are used — no network requests for images or fonts.',
+      parallelDownloads: 'Number of image downloads that run simultaneously. Higher values speed up large documents.',
+      retryCount: 'How many times a failed download or AI call is retried before being skipped.',
+      timeout: 'Maximum seconds to wait for a single network request before it is considered failed.',
+    },
   },
 
   // Step 4
@@ -190,6 +204,7 @@ const en = {
     unlicensed: (n: number) => `, ${n} may require attribution`,
     generateFailed: 'Failed to start job. Please try again.',
     generate: 'Generate',
+    estimatedCost: 'Est. cost',
   },
 
   // Step 5
@@ -206,8 +221,8 @@ const en = {
       LOADING: 'Loading',
       ANALYSING: 'Analysing',
       AI_PROCESSING: 'AI Processing',
-      IMAGE_SEARCH: 'Searching Images',
-      IMAGE_DOWNLOAD: 'Downloading Images',
+      SEARCHING_IMAGES: 'Searching Images',
+      DOWNLOADING_IMAGES: 'Downloading Images',
       RENDERING: 'Rendering',
       VALIDATION: 'Validation',
       EXPORT: 'Export',

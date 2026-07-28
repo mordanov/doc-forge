@@ -5,6 +5,7 @@ import { WizardNav } from '@/components/WizardNav'
 import { PresetSelector } from '@/components/PresetSelector'
 import { ThemeGallery } from '@/components/ThemeGallery'
 import { ColourPicker } from '@/components/ColourPicker'
+import { HintIcon } from '@/components/HintIcon'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -43,7 +44,10 @@ export function Step3PublicationConfig() {
       </div>
 
       <section className="space-y-3">
-        <Label className="text-sm font-semibold">{t.step3.preset}</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-sm font-semibold">{t.step3.preset}</Label>
+          <HintIcon text={t.step3.hints.preset} />
+        </div>
         <PresetSelector
           presets={PRESETS}
           selected={draft.presetId}
@@ -52,13 +56,19 @@ export function Step3PublicationConfig() {
       </section>
 
       <section className="space-y-3">
-        <Label className="text-sm font-semibold">{t.step3.theme}</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-sm font-semibold">{t.step3.theme}</Label>
+          <HintIcon text={t.step3.hints.theme} />
+        </div>
         <ThemeGallery selected={draft.template} onChange={(id) => setPublicationConfig({ template: id })} />
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="language">{t.step3.language}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="language">{t.step3.language}</Label>
+            <HintIcon text={t.step3.hints.language} />
+          </div>
           <Select value={draft.language} onValueChange={(v) => setPublicationConfig({ language: v })}>
             <SelectTrigger id="language">
               <SelectValue />
@@ -70,7 +80,10 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label>{t.step3.outputFormats}</Label>
+          <div className="flex items-center gap-1">
+            <Label>{t.step3.outputFormats}</Label>
+            <HintIcon text={t.step3.hints.outputFormats} />
+          </div>
           <div className="flex flex-wrap gap-2">
             {OUTPUT_FORMATS.map((fmt) => (
               <button
@@ -87,7 +100,10 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="image-density">{t.step3.imageDensity}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="image-density">{t.step3.imageDensity}</Label>
+            <HintIcon text={t.step3.hints.imageDensity} />
+          </div>
           <Select value={draft.imageDensity} onValueChange={(v) => setPublicationConfig({ imageDensity: v as typeof draft.imageDensity })}>
             <SelectTrigger id="image-density"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -99,7 +115,10 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="layout-density">{t.step3.layoutDensity}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="layout-density">{t.step3.layoutDensity}</Label>
+            <HintIcon text={t.step3.hints.layoutDensity} />
+          </div>
           <Select value={draft.layoutDensity} onValueChange={(v) => setPublicationConfig({ layoutDensity: v as typeof draft.layoutDensity })}>
             <SelectTrigger id="layout-density"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -111,7 +130,10 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="colour-palette">{t.step3.colourPalette}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="colour-palette">{t.step3.colourPalette}</Label>
+            <HintIcon text={t.step3.hints.colourPalette} />
+          </div>
           <Select value={draft.colourPalette} onValueChange={(v) => setPublicationConfig({ colourPalette: v })}>
             <SelectTrigger id="colour-palette"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -129,7 +151,10 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="validation-level">{t.step3.validationLevel}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="validation-level">{t.step3.validationLevel}</Label>
+            <HintIcon text={t.step3.hints.validationLevel} />
+          </div>
           <Select value={draft.validationLevel} onValueChange={(v) => setPublicationConfig({ validationLevel: v as typeof draft.validationLevel })}>
             <SelectTrigger id="validation-level"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -143,7 +168,10 @@ export function Step3PublicationConfig() {
 
       <div className="flex items-center justify-between">
         <div>
-          <Label htmlFor="offline-mode" className="text-sm">{t.step3.offlineMode}</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="offline-mode" className="text-sm">{t.step3.offlineMode}</Label>
+            <HintIcon text={t.step3.hints.offlineMode} />
+          </div>
           <p className="text-xs text-muted-foreground">{t.step3.offlineModeDesc}</p>
         </div>
         <Switch
@@ -166,12 +194,15 @@ export function Step3PublicationConfig() {
       {advancedOpen && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 bg-muted/30">
           {[
-            { id: 'parallel-downloads', label: t.step3.parallelDownloads, value: draft.parallelDownloads, key: 'parallelDownloads' as const },
-            { id: 'retry-count', label: t.step3.retryCount, value: draft.retryCount, key: 'retryCount' as const },
-            { id: 'timeout', label: t.step3.timeout, value: draft.timeout, key: 'timeout' as const },
-          ].map(({ id, label, value, key }) => (
+            { id: 'parallel-downloads', label: t.step3.parallelDownloads, hint: t.step3.hints.parallelDownloads, value: draft.parallelDownloads, key: 'parallelDownloads' as const },
+            { id: 'retry-count', label: t.step3.retryCount, hint: t.step3.hints.retryCount, value: draft.retryCount, key: 'retryCount' as const },
+            { id: 'timeout', label: t.step3.timeout, hint: t.step3.hints.timeout, value: draft.timeout, key: 'timeout' as const },
+          ].map(({ id, label, hint, value, key }) => (
             <div key={id} className="space-y-1">
-              <Label htmlFor={id} className="text-xs">{label}</Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor={id} className="text-xs">{label}</Label>
+                <HintIcon text={hint} />
+              </div>
               <input
                 id={id}
                 type="number"

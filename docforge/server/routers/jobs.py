@@ -153,10 +153,15 @@ async def estimate_job(body: EstimateRequest, request: Request) -> dict:
     ai_requests = stats.chapter_count
     ai_tokens = ai_requests * 500
 
+    # gpt-4o pricing: $2.50 / 1M input tokens, $10.00 / 1M output tokens
+    # assume ~80% input, ~20% output
+    cost_usd = round(ai_tokens * 0.8 * 2.50 / 1_000_000 + ai_tokens * 0.2 * 10.00 / 1_000_000, 4)
+
     return {
         "estimated_rendering_seconds": max(10, stats.chapter_count * 5),
         "estimated_ai_tokens": ai_tokens,
         "estimated_ai_requests": ai_requests,
+        "estimated_ai_cost_usd": cost_usd,
         "estimated_page_count": stats.page_count_estimate,
         "image_placeholder_count": stats.placeholder_count,
         "validation_summary": {"warnings": [], "errors": []},

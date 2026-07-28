@@ -17,8 +17,8 @@ const STAGE_ICONS: Record<RenderStage, LucideIcon> = {
   LOADING: Download,
   ANALYSING: Search,
   AI_PROCESSING: Brain,
-  IMAGE_SEARCH: Image,
-  IMAGE_DOWNLOAD: Download,
+  SEARCHING_IMAGES: Image,
+  DOWNLOADING_IMAGES: Download,
   RENDERING: Cog,
   VALIDATION: ShieldCheck,
   EXPORT: Package,
@@ -27,7 +27,7 @@ const STAGE_ICONS: Record<RenderStage, LucideIcon> = {
 
 const STAGE_ORDER: RenderStage[] = [
   'UPLOADING', 'LOADING', 'ANALYSING', 'AI_PROCESSING',
-  'IMAGE_SEARCH', 'IMAGE_DOWNLOAD', 'RENDERING', 'VALIDATION', 'EXPORT', 'FINISHED',
+  'SEARCHING_IMAGES', 'DOWNLOADING_IMAGES', 'RENDERING', 'VALIDATION', 'EXPORT', 'FINISHED',
 ]
 
 function getStageStatus(

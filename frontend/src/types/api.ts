@@ -35,8 +35,8 @@ export type RenderStage =
   | 'LOADING'
   | 'ANALYSING'
   | 'AI_PROCESSING'
-  | 'IMAGE_SEARCH'
-  | 'IMAGE_DOWNLOAD'
+  | 'SEARCHING_IMAGES'
+  | 'DOWNLOADING_IMAGES'
   | 'RENDERING'
   | 'VALIDATION'
   | 'EXPORT'
@@ -84,6 +84,7 @@ export interface JobEstimate {
   estimated_rendering_seconds: number
   estimated_ai_tokens: number
   estimated_ai_requests: number
+  estimated_ai_cost_usd: number
   estimated_page_count: number
   image_placeholder_count: number
   validation_summary: {

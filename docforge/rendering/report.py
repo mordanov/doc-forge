@@ -32,6 +32,16 @@ class RenderingReport:
     def add_skipped(self, message: str) -> None:
         self.skipped_operations.append(message)
 
+    def add_image_attribution(self, candidate: object) -> None:
+        self.image_attributions.append({
+            "provider": getattr(candidate, "provider", ""),
+            "title": getattr(candidate, "title", ""),
+            "author": getattr(candidate, "author", None),
+            "url": getattr(candidate, "url", ""),
+            "source_page": getattr(candidate, "source_page", None),
+            "licence": str(getattr(candidate, "licence", "")),
+        })
+
     def finish(self) -> None:
         self.completed_at = datetime.utcnow()
         if self.started_at:

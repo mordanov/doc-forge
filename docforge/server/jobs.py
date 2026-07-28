@@ -143,6 +143,18 @@ class JobQueue:
                             output_paths=[str(output_path)],
                             warnings=report.warnings,
                         )
+                        project_name = Path(request.input_path.name).stem
+                        store.insert_project(
+                            conn,
+                            name=project_name,
+                            job_id=request.job_id,
+                            input_filename=request.input_path.name,
+                            config=request.config,
+                            output_paths=[str(output_path)],
+                            template=request.template,
+                            language=request.language,
+                            ai_model=request.ai_model,
+                        )
                         logger.info("job_completed", job_id=request.job_id, elapsed=elapsed)
                     else:
                         store.update_job_status(
