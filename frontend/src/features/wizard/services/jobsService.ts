@@ -17,12 +17,33 @@ export async function getEstimate(req: JobSubmitRequest): Promise<JobEstimate> {
   return data
 }
 
-export function downloadJob(jobId: string, fmt: string): void {
-  const url = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/jobs/${jobId}/download/${fmt}`
+export async function downloadJob(jobId: string, fmt: string): Promise<void> {
+  const base = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+  const url = `${base}/jobs/${jobId}/download/${fmt}`
+
+  let token: string | null = null
+  try {
+    const raw = localStorage.getItem('auth')
+    if (raw) {
+      const parsed = JSON.parse(raw) as { state?: { token?: string }; token?: string }
+      token = parsed.state?.token ?? parsed.token ?? null
+    }
+  } catch {
+    // ignore
+  }
+
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`)
+
+  const blob = await res.blob()
+  const objectUrl = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = ''
+  a.href = objectUrl
+  a.download = `${jobId}.${fmt}`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+  URL.revokeObjectURL(objectUrl)
 }

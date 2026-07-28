@@ -68,7 +68,7 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => downloadJob(project.job_id, project.output_paths[0].split('.').pop() ?? 'docx')}
+              onClick={() => void downloadJob(project.job_id, project.output_paths[0].split('.').pop() ?? 'docx')}
               aria-label={`${t.projects.download} ${project.name}`}
             >
               <Download className="h-3.5 w-3.5" />

@@ -58,10 +58,10 @@ export function Step5Rendering() {
     elapsedSeconds: job?.stage === id ? job.elapsed_seconds : undefined,
   }))
 
-  function handleDownload() {
+  async function handleDownload() {
     if (!draft.activeJobId) return
     const fmt = draft.outputFormats[0] ?? 'docx'
-    downloadJob(draft.activeJobId, fmt)
+    await downloadJob(draft.activeJobId, fmt)
   }
 
   function handleDone() {
