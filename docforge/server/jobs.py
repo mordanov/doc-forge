@@ -118,6 +118,7 @@ class JobQueue:
                 else:
                     logger.warning("openai_key_missing", hint="Set OPENAI_API_KEY to enable AI")
 
+                cfg = request.config or {}
                 report = await render_pipeline(
                     input_path=request.input_path,
                     output_path=output_path,
@@ -127,6 +128,8 @@ class JobQueue:
                     ai_model=request.ai_model,
                     creativity=request.creativity,
                     on_stage=on_stage,
+                    offline_mode=bool(cfg.get("offlineMode", False)),
+                    image_sources=cfg.get("imageSources") or ["wikimedia"],
                 )
 
                 elapsed = time.monotonic() - start_time

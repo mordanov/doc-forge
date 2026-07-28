@@ -22,6 +22,7 @@ const LANGUAGES = [
 ]
 
 const OUTPUT_FORMATS = ['docx', 'pdf', 'html', 'markdown', 'epub'] as const
+const IMAGE_SOURCES = ['wikimedia', 'pexels', 'unsplash'] as const
 
 export function Step3PublicationConfig() {
   const { draft, setPublicationConfig, applyPreset, goNext, goBack } = useWizardStore()
@@ -34,6 +35,14 @@ export function Step3PublicationConfig() {
       ? current.filter((f) => f !== fmt)
       : [...current, fmt as typeof OUTPUT_FORMATS[number]]
     if (updated.length > 0) setPublicationConfig({ outputFormats: updated })
+  }
+
+  function toggleSource(src: string) {
+    const current = draft.imageSources
+    const updated = current.includes(src)
+      ? current.filter((s) => s !== src)
+      : [...current, src]
+    setPublicationConfig({ imageSources: updated })
   }
 
   return (
@@ -64,21 +73,21 @@ export function Step3PublicationConfig() {
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Language */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label htmlFor="language">{t.step3.language}</Label>
             <HintIcon text={t.step3.hints.language} />
           </div>
           <Select value={draft.language} onValueChange={(v) => setPublicationConfig({ language: v })}>
-            <SelectTrigger id="language">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger id="language"><SelectValue /></SelectTrigger>
             <SelectContent>
               {LANGUAGES.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
 
+        {/* Output Formats */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label>{t.step3.outputFormats}</Label>
@@ -99,6 +108,87 @@ export function Step3PublicationConfig() {
           </div>
         </div>
 
+        {/* Typography */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="typography">{t.step3.typography}</Label>
+            <HintIcon text={t.step3.hints.typography} />
+          </div>
+          <Select value={draft.typography} onValueChange={(v) => setPublicationConfig({ typography: v })}>
+            <SelectTrigger id="typography"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['conservative', 'editorial', 'magazine', 'luxury'].map((v) => (
+                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sidebar Style */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="sidebar-style">{t.step3.sidebarStyle}</Label>
+            <HintIcon text={t.step3.hints.sidebarStyle} />
+          </div>
+          <Select value={draft.sidebarStyle} onValueChange={(v) => setPublicationConfig({ sidebarStyle: v })}>
+            <SelectTrigger id="sidebar-style"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['none', 'minimal', 'editorial', 'magazine'].map((v) => (
+                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Cover Page */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="cover-page">{t.step3.coverPage}</Label>
+            <HintIcon text={t.step3.hints.coverPage} />
+          </div>
+          <Select value={draft.coverPage} onValueChange={(v) => setPublicationConfig({ coverPage: v })}>
+            <SelectTrigger id="cover-page"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['none', 'simple', 'standard', 'full'].map((v) => (
+                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Table of Contents */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="toc">{t.step3.tableOfContents}</Label>
+            <HintIcon text={t.step3.hints.tableOfContents} />
+          </div>
+          <Select value={draft.tableOfContents} onValueChange={(v) => setPublicationConfig({ tableOfContents: v })}>
+            <SelectTrigger id="toc"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['none', 'simple', 'standard', 'detailed'].map((v) => (
+                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Headers & Footers */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="headers-footers">{t.step3.headersFooters}</Label>
+            <HintIcon text={t.step3.hints.headersFooters} />
+          </div>
+          <Select value={draft.headersFooters} onValueChange={(v) => setPublicationConfig({ headersFooters: v })}>
+            <SelectTrigger id="headers-footers"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['none', 'minimal', 'standard', 'full'].map((v) => (
+                <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Image Density */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label htmlFor="image-density">{t.step3.imageDensity}</Label>
@@ -114,6 +204,7 @@ export function Step3PublicationConfig() {
           </Select>
         </div>
 
+        {/* Layout Density */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label htmlFor="layout-density">{t.step3.layoutDensity}</Label>
@@ -129,6 +220,7 @@ export function Step3PublicationConfig() {
           </Select>
         </div>
 
+        {/* Colour Palette */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label htmlFor="colour-palette">{t.step3.colourPalette}</Label>
@@ -150,6 +242,7 @@ export function Step3PublicationConfig() {
           )}
         </div>
 
+        {/* Validation Level */}
         <div className="space-y-2">
           <div className="flex items-center gap-1">
             <Label htmlFor="validation-level">{t.step3.validationLevel}</Label>
@@ -164,8 +257,52 @@ export function Step3PublicationConfig() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Image Policy */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="image-policy">{t.step3.imagePolicy}</Label>
+            <HintIcon text={t.step3.hints.imagePolicy} />
+          </div>
+          <Select value={draft.imagePolicy} onValueChange={(v) => setPublicationConfig({ imagePolicy: v as typeof draft.imagePolicy })}>
+            <SelectTrigger id="image-policy"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[
+                { value: 'auto', label: 'Auto' },
+                { value: 'placeholders_only', label: 'Placeholders Only' },
+                { value: 'preserve', label: 'Preserve Original' },
+                { value: 'disable', label: 'Disable Images' },
+              ].map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Image Sources */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">
+          <Label>{t.step3.imageSources}</Label>
+          <HintIcon text={t.step3.hints.imageSources} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {IMAGE_SOURCES.map((src) => (
+            <button
+              key={src}
+              type="button"
+              aria-pressed={draft.imageSources.includes(src)}
+              onClick={() => toggleSource(src)}
+              className={`rounded border px-3 py-1 text-xs transition-colors capitalize ${draft.imageSources.includes(src) ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'}`}
+            >
+              {src}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">{t.step3.imageSourcesDesc}</p>
+      </div>
+
+      {/* Offline Mode */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1">
@@ -181,6 +318,7 @@ export function Step3PublicationConfig() {
         />
       </div>
 
+      {/* Advanced Settings */}
       <button
         type="button"
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"

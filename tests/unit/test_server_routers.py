@@ -293,7 +293,7 @@ async def test_delete_queued_job_succeeds(tmp_path):
 async def test_download_job_unsupported_format(tmp_path):
     app = _make_app(tmp_path)
     async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
-        r = await c.get("/jobs/j1/download/pdf", headers=AUTH)
+        r = await c.get("/jobs/j1/download/odt", headers=AUTH)
     assert r.status_code == 400
 
 

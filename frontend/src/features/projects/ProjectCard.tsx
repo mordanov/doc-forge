@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { ParsedProject } from '@/types/api'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ interface ProjectCardProps {
 export function ProjectCard({ project, loading }: ProjectCardProps) {
   const duplicate = useDuplicateProject()
   const del = useDeleteProject()
+  const navigate = useNavigate()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const t = useT()
 
@@ -90,7 +92,7 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => window.open(`/projects/${project.id}`, '_blank')}
+            onClick={() => navigate(`/projects/${project.id}`)}
             aria-label={`${t.projects.open} ${project.name}`}
           >
             <ExternalLink className="h-3.5 w-3.5" />

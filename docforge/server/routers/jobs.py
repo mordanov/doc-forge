@@ -84,12 +84,23 @@ async def get_job(job_id: str, request: Request) -> dict:
     return dict(job)
 
 
+_MEDIA_TYPES: dict[str, str] = {
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "pdf": "application/pdf",
+    "html": "text/html",
+    "markdown": "text/markdown",
+    "epub": "application/epub+zip",
+}
+
+_SUPPORTED_FORMATS = set(_MEDIA_TYPES.keys())
+
+
 @router.get("/{job_id}/download/{fmt}")
 async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     _auth_check(request)
 
-    if fmt != "docx":
-        raise HTTPException(status_code=400, detail="Only 'docx' format is supported in v1")
+    if fmt not in _SUPPORTED_FORMATS:
+        raise HTTPException(status_code=400, detail=f"Unsupported format '{fmt}'. Use: {', '.join(_SUPPORTED_FORMATS)}")
 
     conn = store.get_connection(request.app.state.db_url)
     try:
@@ -107,15 +118,49 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     if not output_paths:
         raise HTTPException(status_code=404, detail="No output files for this job")
 
-    path = Path(output_paths[0])
-    if not path.exists():
+    docx_path = Path(output_paths[0])
+    if not docx_path.exists():
         raise HTTPException(status_code=404, detail="Output file not found on disk")
 
     stem = Path(job.get("input_filename", job_id)).stem
-    download_name = f"docforged-{stem}.docx"
+    output_dir = docx_path.parent
+
+    if fmt == "docx":
+        final_path = docx_path
+    elif fmt == "pdf":
+        final_path = output_dir / f"{job_id}.pdf"
+        if not final_path.exists():
+            from docforge.exporters import pdf as pdf_exporter
+            pdf_exporter.export(docx_path, final_path)
+    elif fmt == "html":
+        final_path = output_dir / f"{job_id}.html"
+        if not final_path.exists():
+            from docforge.document.analyser import analyse
+            from docforge.exporters import html as html_exporter
+            model, _ = analyse(Path(job.get("input_path", str(docx_path))))
+            html_exporter.export(model, final_path, language=job.get("language", "en"))
+    elif fmt == "markdown":
+        final_path = output_dir / f"{job_id}.md"
+        if not final_path.exists():
+            from docforge.document.analyser import analyse
+            from docforge.exporters import markdown as md_exporter
+            model, _ = analyse(Path(job.get("input_path", str(docx_path))))
+            md_exporter.export(model, final_path, language=job.get("language", "en"))
+    elif fmt == "epub":
+        final_path = output_dir / f"{job_id}.epub"
+        if not final_path.exists():
+            from docforge.document.analyser import analyse
+            from docforge.exporters import epub as epub_exporter
+            model, _ = analyse(Path(job.get("input_path", str(docx_path))))
+            epub_exporter.export(model, final_path, language=job.get("language", "en"))
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown format: {fmt}")
+
+    ext = "md" if fmt == "markdown" else fmt
+    download_name = f"docforged-{stem}.{ext}"
     return FileResponse(
-        path=str(path),
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        path=str(final_path),
+        media_type=_MEDIA_TYPES[fmt],
         filename=download_name,
     )
 

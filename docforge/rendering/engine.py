@@ -57,19 +57,29 @@ class RenderingEngine:
         output_path: Path,
         language: str = "en",
         images: dict[int, Path] | None = None,
+        image_attributions: list[dict] | None = None,
     ) -> Any:
         doc = docx.Document()
         self._apply_page_setup(doc)
+
+        doc_title = model.chapters[0].title if model.chapters else ""
         self._add_cover(doc, model, language)
         self._add_toc(doc, model, language)
 
         image_map = images or {}
+        attr_by_ph: dict[int, dict] = {}
+        if image_attributions:
+            # map attribution by index (same order as image_map iteration)
+            for i, (ph_id, _) in enumerate(image_map.items()):
+                if i < len(image_attributions):
+                    attr_by_ph[ph_id] = image_attributions[i]
+
         for chapter in model.chapters:
             decision = decisions.get(chapter.id)
-            self._render_chapter(doc, chapter, decision, image_map)
+            self._render_chapter(doc, chapter, decision, image_map, attr_by_ph)
 
-        self._add_image_sources_appendix(doc, model, language, image_map)
-        self._add_headers_footers(doc, language)
+        self._add_image_sources_appendix(doc, model, language, image_map, image_attributions or [])
+        self._add_headers_footers(doc, language, doc_title)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         doc.save(str(output_path))
@@ -124,6 +134,7 @@ class RenderingEngine:
         chapter: Chapter,
         decision: RenderingDecision | None,
         image_map: dict[int, Path],
+        attr_by_ph: dict[int, dict] | None = None,
     ) -> None:
         palette   = self._theme.get("palette", {})
         typography = self._theme.get("typography", {})
@@ -218,7 +229,8 @@ class RenderingEngine:
                 self._render_table(doc, element)
 
             elif isinstance(element, ImagePlaceholder):
-                self._render_image_placeholder(doc, element, image_map)
+                attr = (attr_by_ph or {}).get(id(element))
+                self._render_image_placeholder(doc, element, image_map, attr)
 
     # ------------------------------------------------------------------
     # Decorative helpers
@@ -307,6 +319,7 @@ class RenderingEngine:
         doc: Any,
         placeholder: ImagePlaceholder,
         image_map: dict[int, Path],
+        attribution: dict | None = None,
     ) -> None:
         img_path = image_map.get(id(placeholder))
         if img_path and img_path.exists():
@@ -314,6 +327,22 @@ class RenderingEngine:
                 doc.add_picture(str(img_path), width=Inches(5.5))
                 last_para = doc.paragraphs[-1]
                 last_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                # Caption
+                caption_text = placeholder.context_hint or placeholder.placeholder_text.split("\n")[0]
+                if attribution:
+                    author = attribution.get("author") or ""
+                    licence = attribution.get("licence") or ""
+                    source = attribution.get("title") or ""
+                    parts = [p for p in [source, author, licence] if p]
+                    if parts:
+                        caption_text = f"{caption_text} — {', '.join(parts)}"
+                caption = doc.add_paragraph(caption_text)
+                caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                caption.paragraph_format.space_before = Pt(2)
+                caption.paragraph_format.space_after = Pt(8)
+                run = caption.runs[0] if caption.runs else caption.add_run(caption_text)
+                run.italic = True
+                run.font.size = Pt(8)
                 logger.debug("image_inserted", path=str(img_path))
                 return
             except Exception as exc:
@@ -331,6 +360,7 @@ class RenderingEngine:
         model: SemanticModel,
         language: str,
         image_map: dict[int, Path],
+        attributions: list[dict] | None = None,
     ) -> None:
         from docforge.core.i18n import get_label
         appendix_label = get_label("image_sources", language)
@@ -338,22 +368,68 @@ class RenderingEngine:
         doc.add_heading(appendix_label, level=1)
         if not image_map:
             doc.add_paragraph("No images were sourced in this rendering.")
-        else:
-            doc.add_paragraph(
-                f"{len(image_map)} image(s) sourced via Wikimedia Commons (CC/PD licences)."
-            )
+            return
 
-    def _add_headers_footers(self, doc: Any, language: str) -> None:
+        attrs = attributions or []
+        if not attrs:
+            doc.add_paragraph(f"{len(image_map)} image(s) sourced (no attribution data available).")
+            return
+
+        # Table: #, Title, Author, Source, Licence
+        table = doc.add_table(rows=1, cols=5)
+        table.style = "Table Grid"
+        hdr = table.rows[0].cells
+        for i, heading_text in enumerate(["#", "Title", "Author", "Source / URL", "Licence"]):
+            hdr[i].text = heading_text
+            hdr[i].paragraphs[0].runs[0].bold = True
+
+        for idx, attr in enumerate(attrs, start=1):
+            row = table.add_row().cells
+            row[0].text = str(idx)
+            row[1].text = attr.get("title") or ""
+            row[2].text = attr.get("author") or ""
+            source_page = attr.get("source_page") or attr.get("url") or ""
+            row[3].text = source_page
+            row[4].text = str(attr.get("licence") or "")
+
+    def _add_headers_footers(self, doc: Any, language: str, title: str = "") -> None:
+        from docx.oxml import OxmlElement
+
         for section in doc.sections:
+            # Header: document title
             header = section.header
             if not header.paragraphs:
                 header.add_paragraph()
-            header.paragraphs[0].text = ""
+            h_para = header.paragraphs[0]
+            h_para.text = title
+            h_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            if h_para.runs:
+                h_para.runs[0].font.size = Pt(9)
+                h_para.runs[0].font.color.rgb = _hex_to_rgb("#888888")
 
+            # Footer: page number field
             footer = section.footer
             if not footer.paragraphs:
                 footer.add_paragraph()
-            para = footer.paragraphs[0]
-            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            if not para.runs:
-                para.add_run("")
+            f_para = footer.paragraphs[0]
+            f_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            # Clear existing content
+            for run in f_para.runs:
+                run.text = ""
+            # Insert PAGE field via OOXML
+            run_elem = OxmlElement("w:r")
+            fld_char_begin = OxmlElement("w:fldChar")
+            fld_char_begin.set(qn("w:fldCharType"), "begin")
+            instr = OxmlElement("w:instrText")
+            instr.set(qn("xml:space"), "preserve")
+            instr.text = " PAGE "
+            fld_char_end = OxmlElement("w:fldChar")
+            fld_char_end.set(qn("w:fldCharType"), "end")
+            run_elem.append(fld_char_begin)
+            f_para._p.append(run_elem)
+            run_instr = OxmlElement("w:r")
+            run_instr.append(instr)
+            f_para._p.append(run_instr)
+            run_end = OxmlElement("w:r")
+            run_end.append(fld_char_end)
+            f_para._p.append(run_end)

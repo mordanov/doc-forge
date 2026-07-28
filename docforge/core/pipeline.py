@@ -10,11 +10,13 @@ from docforge.ai.base import AIContext
 from docforge.ai.cache import AIResponseCache
 from docforge.ai.defaults import DefaultRenderingDecision
 from docforge.ai.prompts.loader import load_prompt
+from docforge.cache.filesystem import FilesystemCache
 from docforge.core.document import ImagePlaceholder
 from docforge.core.rendering import PhotoLayout, RenderingDecision, RenderStage
 from docforge.document.analyser import analyse
 from docforge.document.loader import load_document
 from docforge.exporters import docx as docx_exporter
+from docforge.images.cache import ImageCache
 from docforge.logging.setup import get_logger
 from docforge.rendering.engine import RenderingEngine
 from docforge.rendering.layout_validator import validate as validate_layout
@@ -40,6 +42,9 @@ async def render_pipeline(
     creativity: int = 5,
     ai_cache: AIResponseCache | None = None,
     on_stage: StageCallback = _noop,
+    offline_mode: bool = False,
+    image_sources: list[str] | None = None,
+    image_cache_dir: Path | None = None,
 ) -> RenderingReport:
     job_id = str(uuid.uuid4())
     report = RenderingReport(
@@ -173,11 +178,38 @@ async def render_pipeline(
 
         # Stage 5: Image search & download
         images_dir = output_path.parent / f"{output_path.stem}_images"
-        fetched_images: dict[str, Path] = {}
-        try:
-            from docforge.images.wikimedia import WikimediaProvider
+        fetched_images: dict[int, Path] = {}
 
-            image_provider = WikimediaProvider()
+        # Build image providers from config
+        enabled_sources = set(image_sources or ["wikimedia"])
+        providers = []
+        if not offline_mode:
+            if "wikimedia" in enabled_sources:
+                from docforge.images.wikimedia import WikimediaProvider
+                providers.append(WikimediaProvider())
+            if "pexels" in enabled_sources:
+                import os as _os
+                pexels_key = _os.getenv("PEXELS_API_KEY", "").strip()
+                if pexels_key:
+                    from docforge.images.pexels import PexelsProvider
+                    providers.append(PexelsProvider(pexels_key))
+                else:
+                    logger.warning("pexels_key_missing", hint="Set PEXELS_API_KEY to enable Pexels")
+            if "unsplash" in enabled_sources:
+                import os as _os
+                unsplash_key = _os.getenv("UNSPLASH_ACCESS_KEY", "").strip()
+                if unsplash_key:
+                    from docforge.images.unsplash import UnsplashProvider
+                    providers.append(UnsplashProvider(unsplash_key))
+                else:
+                    logger.warning("unsplash_key_missing", hint="Set UNSPLASH_ACCESS_KEY to enable Unsplash")
+
+        # Set up image cache
+        img_cache: ImageCache | None = None
+        if image_cache_dir:
+            img_cache = ImageCache(FilesystemCache(image_cache_dir, bucket="images"))
+
+        try:
             placeholders = [
                 (chapter, el)
                 for chapter in model.chapters
@@ -187,7 +219,11 @@ async def render_pipeline(
             total_placeholders = len(placeholders)
             if total_placeholders > 0:
                 on_stage(RenderStage.SEARCHING_IMAGES, 72, f"Searching images (0/{total_placeholders})")
-                logger.info("pipeline_image_search_start", total=total_placeholders)
+                logger.info("pipeline_image_search_start", total=total_placeholders, offline=offline_mode)
+
+                # Map placeholder id → ImageCandidate for download stage
+                candidate_map: dict[int, object] = {}
+
                 for idx, (chapter, placeholder) in enumerate(placeholders):
                     decision = decisions.get(chapter.id)
                     if decision and decision.photo_layout == PhotoLayout.NONE:
@@ -198,33 +234,47 @@ async def render_pipeline(
                         72 + int(3 * idx / total_placeholders),
                         f"Searching images ({idx + 1}/{total_placeholders})",
                     )
-                    try:
-                        candidates = await image_provider.search(query, max_results=1)
-                        if candidates:
-                            fetched_images[id(placeholder)] = candidates[0]  # type: ignore[assignment]
-                    except Exception as exc:
-                        logger.warning("pipeline_image_search_failed", query=query, error=str(exc))
+                    for provider in providers:
+                        try:
+                            candidates = await provider.search(query, max_results=1)
+                            if candidates:
+                                candidate_map[id(placeholder)] = candidates[0]
+                                break
+                        except Exception as exc:
+                            logger.warning("pipeline_image_search_failed", query=query, provider=provider.provider_id, error=str(exc))
 
-                logger.info("pipeline_image_search_done", found=len(fetched_images), total=total_placeholders)
+                logger.info("pipeline_image_search_done", found=len(candidate_map), total=total_placeholders)
 
-                if fetched_images:
-                    on_stage(RenderStage.DOWNLOADING_IMAGES, 75, f"Downloading images (0/{len(fetched_images)})")
+                if candidate_map:
+                    on_stage(RenderStage.DOWNLOADING_IMAGES, 75, f"Downloading images (0/{len(candidate_map)})")
                     images_dir.mkdir(parents=True, exist_ok=True)
                     downloaded: dict[int, Path] = {}
-                    for dl_idx, (ph_id, candidate) in enumerate(fetched_images.items()):
+                    for dl_idx, (ph_id, candidate) in enumerate(candidate_map.items()):
                         on_stage(
                             RenderStage.DOWNLOADING_IMAGES,
-                            75 + int(5 * dl_idx / len(fetched_images)),
-                            f"Downloading images ({dl_idx + 1}/{len(fetched_images)})",
+                            75 + int(5 * dl_idx / len(candidate_map)),
+                            f"Downloading images ({dl_idx + 1}/{len(candidate_map)})",
                         )
                         try:
-                            ext = candidate.url.rsplit(".", 1)[-1].split("?")[0].lower() or "jpg"  # type: ignore[union-attr]
-                            raw_path = images_dir / f"img_{dl_idx:03d}_raw.{ext}"
+                            # Check image cache first
+                            cached = img_cache.get(candidate, 1200, 900) if img_cache else None  # type: ignore[arg-type]
                             opt_path = images_dir / f"img_{dl_idx:03d}.jpg"
-                            await image_provider.download(candidate, raw_path)  # type: ignore[arg-type]
-                            from docforge.images.optimiser import optimise
-                            optimise(raw_path, opt_path, max_width=1200, max_height=900)
-                            raw_path.unlink(missing_ok=True)
+                            if cached:
+                                opt_path.write_bytes(cached[0])
+                                logger.debug("image_cache_hit", index=dl_idx)
+                            else:
+                                ext = candidate.url.rsplit(".", 1)[-1].split("?")[0].lower() or "jpg"  # type: ignore[union-attr]
+                                raw_path = images_dir / f"img_{dl_idx:03d}_raw.{ext}"
+                                # Find the provider that found this candidate
+                                provider_id = getattr(candidate, "provider", "wikimedia")
+                                dl_provider = next((p for p in providers if p.provider_id == provider_id), providers[0] if providers else None)
+                                if dl_provider:
+                                    await dl_provider.download(candidate, raw_path)  # type: ignore[arg-type]
+                                from docforge.images.optimiser import optimise
+                                optimise(raw_path, opt_path, max_width=1200, max_height=900)
+                                raw_path.unlink(missing_ok=True)
+                                if img_cache and opt_path.exists():
+                                    img_cache.put(candidate, 1200, 900, opt_path.read_bytes())  # type: ignore[arg-type]
                             downloaded[int(ph_id)] = opt_path
                             report.add_image_attribution(candidate)  # type: ignore[arg-type]
                         except Exception as exc:
@@ -238,7 +288,11 @@ async def render_pipeline(
         on_stage(RenderStage.RENDERING, 80, "Rendering document")
         theme = load_theme(template)
         engine = RenderingEngine(theme)
-        doc = engine.render(model, decisions, output_path, language=language, images=fetched_images)
+        doc = engine.render(
+            model, decisions, output_path, language=language,
+            images=fetched_images,
+            image_attributions=report.image_attributions,
+        )
 
         # Stage 6: Export with metadata
         on_stage(RenderStage.EXPORT, 90, "Exporting DOCX")
