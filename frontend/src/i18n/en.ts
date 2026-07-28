@@ -221,7 +221,7 @@ const en = {
     invalidType: 'Only .docx files are accepted',
     tooLarge: (limit: string) => `File exceeds the ${limit} limit`,
   },
-} as const
+}
 
 export type Translations = typeof en
 export default en
