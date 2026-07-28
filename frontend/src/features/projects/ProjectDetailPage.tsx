@@ -107,24 +107,21 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        {config && Object.keys(config).length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Configuration</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm">
-              {(config as Record<string, unknown>).imageDensity && (
-                <Row label="Image Density" value={String((config as Record<string, unknown>).imageDensity)} />
-              )}
-              {(config as Record<string, unknown>).layoutDensity && (
-                <Row label="Layout Density" value={String((config as Record<string, unknown>).layoutDensity)} />
-              )}
-              {(config as Record<string, unknown>).typography && (
-                <Row label="Typography" value={String((config as Record<string, unknown>).typography)} />
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {config && Object.keys(config).length > 0 && (() => {
+          const cfg = config as Record<string, string>
+          return (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Configuration</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                {cfg.imageDensity && <Row label="Image Density" value={cfg.imageDensity} />}
+                {cfg.layoutDensity && <Row label="Layout Density" value={cfg.layoutDensity} />}
+                {cfg.typography && <Row label="Typography" value={cfg.typography} />}
+              </CardContent>
+            </Card>
+          )
+        })()}
       </div>
 
       {project.output_paths.length > 0 && (
