@@ -42,7 +42,7 @@ export function Step3PublicationConfig() {
     const updated = current.includes(src)
       ? current.filter((s) => s !== src)
       : [...current, src]
-    setPublicationConfig({ imageSources: updated })
+    if (updated.length > 0) setPublicationConfig({ imageSources: updated })
   }
 
   return (
@@ -301,17 +301,22 @@ export function Step3PublicationConfig() {
           <HintIcon text={t.step3.hints.imageSources} />
         </div>
         <div className="flex flex-wrap gap-2">
-          {IMAGE_SOURCES.map((src) => (
-            <button
-              key={src}
-              type="button"
-              aria-pressed={draft.imageSources.includes(src)}
-              onClick={() => toggleSource(src)}
-              className={`rounded border px-3 py-1 text-xs transition-colors capitalize ${draft.imageSources.includes(src) ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'}`}
-            >
-              {src}
-            </button>
-          ))}
+          {IMAGE_SOURCES.map((src) => {
+            const isSelected = draft.imageSources.includes(src)
+            const isLastSelected = isSelected && draft.imageSources.length === 1
+            return (
+              <button
+                key={src}
+                type="button"
+                aria-pressed={isSelected}
+                disabled={isLastSelected}
+                onClick={() => toggleSource(src)}
+                className={`rounded border px-3 py-1 text-xs transition-colors capitalize ${isSelected ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'} ${isLastSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {src}
+              </button>
+            )
+          })}
         </div>
         <p className="text-xs text-muted-foreground">{t.step3.imageSourcesDesc}</p>
       </div>

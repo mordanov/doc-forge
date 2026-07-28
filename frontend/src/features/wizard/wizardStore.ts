@@ -21,7 +21,7 @@ const DEFAULT_DRAFT: WizardDraft = {
   imageSources: ['pexels', 'unsplash'],
   imageDensity: 'balanced',
   layoutDensity: 'balanced',
-  typography: 'serif',
+  typography: 'conservative',
   colourPalette: 'auto',
   customColour: null,
   sidebarStyle: 'none',

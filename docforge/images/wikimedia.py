@@ -18,6 +18,12 @@ _API_URL = "https://commons.wikimedia.org/w/api.php"
 _THUMBNAIL_URL = "https://commons.wikimedia.org/wiki/Special:FilePath"
 _RATE_LIMIT_INTERVAL = 1.0  # seconds between requests
 
+# Wikimedia API requires a descriptive User-Agent to avoid 403 blocks.
+# See: https://www.mediawiki.org/wiki/API:Etiquette
+_HEADERS = {
+    "User-Agent": "DocForge/1.0 (https://github.com/docforge/docforge; docforge@example.com) httpx/0.27",
+}
+
 
 _LICENCE_MAP: dict[str, LicenceType] = {
     "public domain": LicenceType.PUBLIC_DOMAIN,
@@ -73,7 +79,7 @@ class WikimediaProvider(ImageProvider):
             "iiprop": "url|size|extmetadata|mime",
             "format": "json",
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, headers=_HEADERS) as client:
             try:
                 response = await client.get(_API_URL, params=params)
                 response.raise_for_status()
@@ -145,7 +151,7 @@ class WikimediaProvider(ImageProvider):
         await self._rate_limit()
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, headers=_HEADERS) as client:
             try:
                 async with client.stream("GET", candidate.url) as response:
                     response.raise_for_status()
@@ -159,7 +165,7 @@ class WikimediaProvider(ImageProvider):
 
     async def health_check(self) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=5.0, headers=_HEADERS) as client:
                 r = await client.get(
                     _API_URL, params={"action": "query", "format": "json", "meta": "siteinfo"}
                 )
