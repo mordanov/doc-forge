@@ -151,8 +151,10 @@ class WikimediaProvider(ImageProvider):
         await self._rate_limit()
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
+        referer = candidate.source_page or "https://commons.wikimedia.org/"
+        dl_headers = {**_HEADERS, "Referer": referer}
         async with httpx.AsyncClient(
-            timeout=30.0, follow_redirects=True, headers=_HEADERS
+            timeout=30.0, follow_redirects=True, headers=dl_headers
         ) as client:
             try:
                 async with client.stream("GET", candidate.url) as response:

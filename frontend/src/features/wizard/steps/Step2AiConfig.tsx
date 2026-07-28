@@ -6,10 +6,21 @@ import { Slider } from '@/components/ui/slider'
 import { useT } from '@/hooks/useT'
 
 const AI_MODELS = [
-  { id: 'gpt-5.6', name: 'GPT-5.6' },
-  { id: 'gpt-5.6-mini', name: 'GPT-5.6 Mini' },
-  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Solaris' },
+  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol' },
+  { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
+  { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra' },
+  { id: 'gpt-5.5-pro', name: 'GPT-5.5 Pro' },
   { id: 'gpt-5.5', name: 'GPT-5.5' },
+  { id: 'gpt-5.4-pro', name: 'GPT-5.4 Pro' },
+  { id: 'gpt-5.4', name: 'GPT-5.4' },
+  { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini' },
+  { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano' },
+  { id: 'gpt-4o', name: 'GPT-4o' },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+  { id: 'gpt-4.1', name: 'GPT-4.1' },
+  { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
+  { id: 'o3', name: 'o3' },
+  { id: 'o4-mini', name: 'o4-mini' },
 ]
 
 const QUALITY_IDS = ['fast', 'balanced', 'maximum'] as const
