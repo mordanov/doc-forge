@@ -55,6 +55,7 @@ export interface Job {
   output_paths: string
   warnings: string
   error: string | null
+  stage_message: string | null
   created_at: string
   started_at: string | null
   completed_at: string | null

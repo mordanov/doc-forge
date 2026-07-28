@@ -56,6 +56,7 @@ export function Step5Rendering() {
     status: job ? getStageStatus(id, job.stage, job.status) : 'pending',
     progress: job?.stage === id && job.status === 'RUNNING' ? job.progress : undefined,
     elapsedSeconds: job?.stage === id ? job.elapsed_seconds : undefined,
+    detail: job?.stage === id && job.status === 'RUNNING' ? (job.stage_message ?? undefined) : undefined,
   }))
 
   async function handleDownload() {

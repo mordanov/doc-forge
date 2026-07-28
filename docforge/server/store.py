@@ -11,6 +11,8 @@ import psycopg2
 import psycopg2.extras
 
 _DDL = """
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS stage_message TEXT;
+
 CREATE TABLE IF NOT EXISTS user_accounts (
     id            SERIAL PRIMARY KEY,
     username      TEXT NOT NULL UNIQUE,
@@ -31,6 +33,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     output_paths    TEXT NOT NULL DEFAULT '[]',
     warnings        TEXT NOT NULL DEFAULT '[]',
     error           TEXT,
+    stage_message   TEXT,
     created_at      TEXT NOT NULL,
     started_at      TEXT,
     completed_at    TEXT
@@ -134,6 +137,7 @@ def update_job_status(
     error: str | None = None,
     output_paths: list[str] | None = None,
     warnings: list[str] | None = None,
+    message: str | None = None,
 ) -> None:
     parts: list[str] = ["status = %s", "stage = %s", "progress = %s", "elapsed_seconds = %s"]
     params: list[Any] = [status, stage, progress, elapsed]
@@ -153,6 +157,9 @@ def update_job_status(
     if warnings is not None:
         parts.append("warnings = %s")
         params.append(json.dumps(warnings))
+    if message is not None:
+        parts.append("stage_message = %s")
+        params.append(message)
 
     params.append(job_id)
     with conn, conn.cursor() as cur:

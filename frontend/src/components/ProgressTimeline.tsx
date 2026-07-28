@@ -9,6 +9,7 @@ export interface ProgressStage {
   status: 'pending' | 'active' | 'complete' | 'error'
   progress?: number
   elapsedSeconds?: number
+  detail?: string
 }
 
 interface ProgressTimelineProps {
@@ -54,6 +55,10 @@ export function ProgressTimeline({ stages, currentStage: _currentStage }: Progre
                   </span>
                 )}
               </div>
+
+              {stage.status === 'active' && stage.detail && (
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{stage.detail}</p>
+              )}
 
               {stage.status === 'active' && stage.progress != null && (
                 <div className="mt-1 h-1.5 w-full rounded-full bg-muted overflow-hidden">

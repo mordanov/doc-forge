@@ -104,6 +104,7 @@ class JobQueue:
                             stage.value,
                             progress=progress,
                             elapsed=time.monotonic() - _t0,
+                            message=message,
                         )
                     finally:
                         c.close()
