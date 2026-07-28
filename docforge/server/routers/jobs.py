@@ -111,10 +111,12 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     if not path.exists():
         raise HTTPException(status_code=404, detail="Output file not found on disk")
 
+    stem = Path(job.get("input_filename", job_id)).stem
+    download_name = f"docforged-{stem}.docx"
     return FileResponse(
         path=str(path),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename=f"{job_id}.docx",
+        filename=download_name,
     )
 
 
