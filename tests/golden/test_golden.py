@@ -78,6 +78,6 @@ def test_golden_heading_count_matches():
         expected_h1s = [
             p.text for p in expected.paragraphs if p.style and p.style.name == "Heading 1"
         ]
-        assert len(actual_h1s) == len(
-            expected_h1s
-        ), f"H1 count mismatch: got {actual_h1s}, expected {expected_h1s}"
+        assert len(actual_h1s) == len(expected_h1s), (
+            f"H1 count mismatch: got {actual_h1s}, expected {expected_h1s}"
+        )
