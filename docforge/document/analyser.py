@@ -156,7 +156,7 @@ def analyse(
                         break
                     hint_match = _SEARCH_HINT_RE.match(nxt.text)
                     if hint_match:
-                        search_hint = nxt.text[hint_match.end():].strip()
+                        search_hint = nxt.text[hint_match.end() :].strip()
                         j += 1
                         break
                     caption_parts.append(nxt.text.strip())
@@ -266,5 +266,3 @@ def _ensure_intro_chapter(chapters: list[Chapter]) -> Chapter:
         intro = Chapter(id=str(uuid.uuid4()), title="Introduction", heading_level=1)
         chapters.append(intro)
     return chapters[0]
-
-

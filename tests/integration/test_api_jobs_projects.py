@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import uuid
-from pathlib import Path
 
 import httpx
 import pytest
@@ -36,11 +35,10 @@ def app_with_user(app_dirs):
     store.init_db(DATABASE_URL)
     conn = store.get_connection(DATABASE_URL)
     try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("DELETE FROM projects")
-                cur.execute("DELETE FROM jobs")
-                cur.execute("DELETE FROM user_accounts")
+        with conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM projects")
+            cur.execute("DELETE FROM jobs")
+            cur.execute("DELETE FROM user_accounts")
         store.upsert_user(conn, "admin", hash_password("secret123"))
     finally:
         conn.close()

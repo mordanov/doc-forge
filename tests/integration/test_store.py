@@ -18,11 +18,10 @@ def db():
     store.init_db(DATABASE_URL)
     conn = store.get_connection(DATABASE_URL)
     # Wipe tables before each test for isolation
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM projects")
-            cur.execute("DELETE FROM jobs")
-            cur.execute("DELETE FROM user_accounts")
+    with conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM projects")
+        cur.execute("DELETE FROM jobs")
+        cur.execute("DELETE FROM user_accounts")
     yield DATABASE_URL
     conn.close()
 

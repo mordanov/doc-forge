@@ -77,7 +77,9 @@ class JobQueue:
             try:
                 conn = store.get_connection(self._db_url)
                 try:
-                    store.update_job_status(conn, request.job_id, "RUNNING", "ANALYSING", progress=5)
+                    store.update_job_status(
+                        conn, request.job_id, "RUNNING", "ANALYSING", progress=5
+                    )
                 finally:
                     conn.close()
 
@@ -140,7 +142,9 @@ class JobQueue:
                             error=report.fatal_failure,
                             warnings=report.warnings,
                         )
-                        logger.error("job_failed", job_id=request.job_id, error=report.fatal_failure)
+                        logger.error(
+                            "job_failed", job_id=request.job_id, error=report.fatal_failure
+                        )
                 finally:
                     conn.close()
 

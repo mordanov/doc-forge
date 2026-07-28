@@ -65,6 +65,7 @@ async def analyse_document(doc_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Document not found")
 
     from docforge.config.schema import ImagesConfig
+
     images_cfg = ImagesConfig()
     model, issues = analyse(path, extra_placeholder_patterns=images_cfg.extra_placeholder_patterns)
     stats = model.statistics
