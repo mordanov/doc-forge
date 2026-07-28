@@ -4,7 +4,6 @@ import { WizardNav } from '@/components/WizardNav'
 import { useWizardStore } from '../wizardStore'
 import { useUploadDocument } from '../services/hooks/useUploadDocument'
 import { useAnalyseDocument } from '../services/hooks/useAnalyseDocument'
-import { formatBytes } from '@/lib/utils'
 
 export function Step1Upload() {
   const { draft, goNext } = useWizardStore()

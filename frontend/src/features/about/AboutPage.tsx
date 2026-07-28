@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import type { HealthCheck } from '@/types/api'
-import { ExternalLink, Github } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.0'
 
@@ -46,7 +46,6 @@ export default function AboutPage() {
             className="flex items-center gap-2 text-sm text-primary hover:underline w-fit"
             aria-label="GitHub repository (opens in new tab)"
           >
-            <Github className="h-4 w-4" />
             GitHub Repository
             <ExternalLink className="h-3 w-3" />
           </a>
