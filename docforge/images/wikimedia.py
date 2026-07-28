@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from pathlib import Path
 
@@ -18,11 +19,14 @@ _API_URL = "https://commons.wikimedia.org/w/api.php"
 _THUMBNAIL_URL = "https://commons.wikimedia.org/wiki/Special:FilePath"
 _RATE_LIMIT_INTERVAL = 1.0  # seconds between requests
 
-# Wikimedia API requires a descriptive User-Agent to avoid 403 blocks.
+# Wikimedia requires a descriptive User-Agent with valid contact information.
 # See: https://www.mediawiki.org/wiki/API:Etiquette
-_HEADERS = {
-    "User-Agent": "DocForge/1.0 (https://github.com/docforge/docforge; docforge@example.com) httpx/0.27",
-}
+_DEFAULT_USER_AGENT = "DocForge/1.0 (https://github.com/mordanov/doc-forge)"
+
+
+def _headers() -> dict[str, str]:
+    user_agent = os.getenv("DOCFORGE_WIKIMEDIA_USER_AGENT", "").strip()
+    return {"User-Agent": user_agent or _DEFAULT_USER_AGENT}
 
 
 _LICENCE_MAP: dict[str, LicenceType] = {
@@ -79,7 +83,7 @@ class WikimediaProvider(ImageProvider):
             "iiprop": "url|size|extmetadata|mime",
             "format": "json",
         }
-        async with httpx.AsyncClient(timeout=10.0, headers=_HEADERS) as client:
+        async with httpx.AsyncClient(timeout=10.0, headers=_headers()) as client:
             try:
                 response = await client.get(_API_URL, params=params)
                 response.raise_for_status()
@@ -152,7 +156,7 @@ class WikimediaProvider(ImageProvider):
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
         referer = candidate.source_page or "https://commons.wikimedia.org/"
-        dl_headers = {**_HEADERS, "Referer": referer}
+        dl_headers = {**_headers(), "Referer": referer}
         async with httpx.AsyncClient(
             timeout=30.0, follow_redirects=True, headers=dl_headers
         ) as client:
@@ -169,7 +173,7 @@ class WikimediaProvider(ImageProvider):
 
     async def health_check(self) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=5.0, headers=_HEADERS) as client:
+            async with httpx.AsyncClient(timeout=5.0, headers=_headers()) as client:
                 r = await client.get(
                     _API_URL, params={"action": "query", "format": "json", "meta": "siteinfo"}
                 )
