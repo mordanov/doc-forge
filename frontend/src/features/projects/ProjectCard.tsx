@@ -8,6 +8,7 @@ import { useDeleteProject } from './services/hooks/useDeleteProject'
 import { downloadJob } from '@/features/wizard/services/jobsService'
 import { cn } from '@/lib/utils'
 import { Loader2, Copy, Download, Trash2, ExternalLink } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
 const STATUS_COLOURS: Record<string, string> = {
   COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -26,6 +27,7 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
   const duplicate = useDuplicateProject()
   const del = useDeleteProject()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const t = useT()
 
   if (loading) {
     return <div className="h-40 rounded-lg bg-muted animate-pulse" />
@@ -67,10 +69,10 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
               size="sm"
               variant="outline"
               onClick={() => downloadJob(project.job_id, project.output_paths[0].split('.').pop() ?? 'docx')}
-              aria-label={`Download ${project.name}`}
+              aria-label={`${t.projects.download} ${project.name}`}
             >
               <Download className="h-3.5 w-3.5" />
-              Download
+              {t.projects.download}
             </Button>
           )}
 
@@ -79,20 +81,20 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
             variant="ghost"
             disabled={duplicate.isPending}
             onClick={() => duplicate.mutate(project.id)}
-            aria-label={`Duplicate ${project.name}`}
+            aria-label={`${t.projects.duplicate} ${project.name}`}
           >
             {duplicate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
-            Duplicate
+            {t.projects.duplicate}
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
             onClick={() => window.open(`/projects/${project.id}`, '_blank')}
-            aria-label={`Open ${project.name}`}
+            aria-label={`${t.projects.open} ${project.name}`}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Open
+            {t.projects.open}
           </Button>
 
           <Button
@@ -101,10 +103,10 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
             className="text-destructive hover:text-destructive"
             disabled={del.isPending}
             onClick={() => setConfirmOpen(true)}
-            aria-label={`Delete ${project.name}`}
+            aria-label={`${t.projects.delete} ${project.name}`}
           >
             {del.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-            Delete
+            {t.projects.delete}
           </Button>
         </CardFooter>
       </Card>
@@ -112,13 +114,15 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete project?</DialogTitle>
-            <DialogDescription>
-              "<strong>{project.name || project.input_filename}</strong>" will be permanently deleted and cannot be recovered.
-            </DialogDescription>
+            <DialogTitle>{t.projects.deleteTitle}</DialogTitle>
+            <DialogDescription
+              dangerouslySetInnerHTML={{
+                __html: t.projects.deleteDescription(`<strong>${project.name || project.input_filename}</strong>`),
+              }}
+            />
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>{t.projects.cancel}</Button>
             <Button
               variant="destructive"
               disabled={del.isPending}
@@ -126,7 +130,7 @@ export function ProjectCard({ project, loading }: ProjectCardProps) {
                 del.mutate(project.id, { onSuccess: () => setConfirmOpen(false) })
               }}
             >
-              {del.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete'}
+              {del.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t.projects.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

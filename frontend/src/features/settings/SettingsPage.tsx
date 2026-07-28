@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Check } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
 const LANGUAGES = [
   { id: 'en', name: 'English' },
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const store = useSettingsStore()
   const settings = store.get()
   const { theme, toggleTheme } = useTheme()
+  const t = useT()
 
   const [language, setLanguage] = useState(settings.defaultLanguage)
   const [outputFormat, setOutputFormat] = useState(settings.defaultOutputFormat)
@@ -53,14 +55,14 @@ export default function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">{t.settings.title}</h1>
 
       <section className="space-y-4">
-        <h2 className="text-base font-semibold">Appearance</h2>
+        <h2 className="text-base font-semibold">{t.settings.appearance}</h2>
         <div className="flex items-center justify-between">
           <div>
-            <Label htmlFor="dark-mode" className="text-sm">Dark Mode</Label>
-            <p className="text-xs text-muted-foreground">Switch between light and dark interface</p>
+            <Label htmlFor="dark-mode" className="text-sm">{t.settings.darkMode}</Label>
+            <p className="text-xs text-muted-foreground">{t.settings.darkModeDesc}</p>
           </div>
           <Switch
             id="dark-mode"
@@ -72,10 +74,10 @@ export default function SettingsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-base font-semibold">Defaults</h2>
+        <h2 className="text-base font-semibold">{t.settings.defaults}</h2>
 
         <div className="space-y-2">
-          <Label htmlFor="default-language">Default Language</Label>
+          <Label htmlFor="default-language">{t.settings.defaultLanguage}</Label>
           <Select value={language} onValueChange={setLanguage}>
             <SelectTrigger id="default-language">
               <SelectValue />
@@ -87,7 +89,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="default-format">Default Output Format</Label>
+          <Label htmlFor="default-format">{t.settings.defaultFormat}</Label>
           <Select value={outputFormat} onValueChange={(v) => setOutputFormat(v as typeof outputFormat)}>
             <SelectTrigger id="default-format">
               <SelectValue />
@@ -99,22 +101,22 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="default-template">Default Template</Label>
+          <Label htmlFor="default-template">{t.settings.defaultTemplate}</Label>
           <Select value={template} onValueChange={setTemplate}>
             <SelectTrigger id="default-template">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TEMPLATES.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+              {TEMPLATES.map((t2) => <SelectItem key={t2.id} value={t2.id}>{t2.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-base font-semibold">API Keys</h2>
+        <h2 className="text-base font-semibold">{t.settings.apiKeys}</h2>
         <div className="space-y-2">
-          <Label htmlFor="openai-key">OpenAI API Key</Label>
+          <Label htmlFor="openai-key">{t.settings.openAiKey}</Label>
           <Input
             id="openai-key"
             type="password"
@@ -123,16 +125,16 @@ export default function SettingsPage() {
             onChange={(e) => setApiKey(e.target.value)}
             autoComplete="off"
           />
-          <p className="text-xs text-muted-foreground">Stored locally. Never logged or transmitted to third parties.</p>
+          <p className="text-xs text-muted-foreground">{t.settings.openAiKeyHint}</p>
         </div>
       </section>
 
       <Button onClick={handleSave} disabled={saving}>
         {saving ? (
-          <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+          <><Loader2 className="h-4 w-4 animate-spin" />{t.settings.saving}</>
         ) : saved ? (
-          <><Check className="h-4 w-4" />Saved</>
-        ) : 'Save Settings'}
+          <><Check className="h-4 w-4" />{t.settings.saved}</>
+        ) : t.settings.save}
       </Button>
     </div>
   )

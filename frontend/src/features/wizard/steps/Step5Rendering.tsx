@@ -10,21 +10,25 @@ import {
   WifiOff,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
-const STAGE_CONFIG: { id: RenderStage; label: string; icon: LucideIcon }[] = [
-  { id: 'UPLOADING', label: 'Uploading', icon: Upload },
-  { id: 'LOADING', label: 'Loading', icon: Download },
-  { id: 'ANALYSING', label: 'Analysing', icon: Search },
-  { id: 'AI_PROCESSING', label: 'AI Processing', icon: Brain },
-  { id: 'IMAGE_SEARCH', label: 'Searching Images', icon: Image },
-  { id: 'IMAGE_DOWNLOAD', label: 'Downloading Images', icon: Download },
-  { id: 'RENDERING', label: 'Rendering', icon: Cog },
-  { id: 'VALIDATION', label: 'Validation', icon: ShieldCheck },
-  { id: 'EXPORT', label: 'Export', icon: Package },
-  { id: 'FINISHED', label: 'Finished', icon: Flag },
+const STAGE_ICONS: Record<RenderStage, LucideIcon> = {
+  UPLOADING: Upload,
+  LOADING: Download,
+  ANALYSING: Search,
+  AI_PROCESSING: Brain,
+  IMAGE_SEARCH: Image,
+  IMAGE_DOWNLOAD: Download,
+  RENDERING: Cog,
+  VALIDATION: ShieldCheck,
+  EXPORT: Package,
+  FINISHED: Flag,
+}
+
+const STAGE_ORDER: RenderStage[] = [
+  'UPLOADING', 'LOADING', 'ANALYSING', 'AI_PROCESSING',
+  'IMAGE_SEARCH', 'IMAGE_DOWNLOAD', 'RENDERING', 'VALIDATION', 'EXPORT', 'FINISHED',
 ]
-
-const STAGE_ORDER = STAGE_CONFIG.map((s) => s.id)
 
 function getStageStatus(
   stageId: RenderStage,
@@ -43,11 +47,12 @@ export function Step5Rendering() {
   const { draft, reset } = useWizardStore()
   const { data: job, connectionLost } = useJob(draft.activeJobId, { pollingInterval: 3000 })
   const navigate = useNavigate()
+  const t = useT()
 
-  const stages: ProgressStage[] = STAGE_CONFIG.map(({ id, label, icon }) => ({
+  const stages: ProgressStage[] = STAGE_ORDER.map((id) => ({
     id,
-    label,
-    icon,
+    label: t.step5.stages[id],
+    icon: STAGE_ICONS[id],
     status: job ? getStageStatus(id, job.stage, job.status) : 'pending',
     progress: job?.stage === id && job.status === 'RUNNING' ? job.progress : undefined,
     elapsedSeconds: job?.stage === id ? job.elapsed_seconds : undefined,
@@ -67,14 +72,14 @@ export function Step5Rendering() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-xl font-semibold mb-1">Generating</h2>
+        <h2 className="text-xl font-semibold mb-1">{t.step5.title}</h2>
         <p className="text-sm text-muted-foreground">{draft.filename}</p>
       </div>
 
       {connectionLost && (
         <div className="flex items-center gap-2 rounded-lg border border-orange-400/50 bg-orange-50 dark:bg-orange-900/20 px-4 py-3 text-sm text-orange-700 dark:text-orange-300">
           <WifiOff className="h-4 w-4 shrink-0" />
-          Connection lost — retrying…
+          {t.step5.connectionLost}
         </div>
       )}
 
@@ -84,10 +89,10 @@ export function Step5Rendering() {
         <div className="flex gap-3 mt-2">
           <Button onClick={handleDownload}>
             <Download className="h-4 w-4" />
-            Download
+            {t.step5.download}
           </Button>
           <Button variant="outline" onClick={handleDone}>
-            View Projects
+            {t.step5.viewProjects}
           </Button>
         </div>
       )}
@@ -96,7 +101,7 @@ export function Step5Rendering() {
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 space-y-2">
           <div className="flex items-center gap-2 text-destructive">
             <CheckCircle className="h-4 w-4" />
-            <p className="text-sm font-medium">Generation failed</p>
+            <p className="text-sm font-medium">{t.step5.failed}</p>
           </div>
           {job.error && <p className="text-xs text-destructive">{job.error}</p>}
           <button
@@ -104,14 +109,14 @@ export function Step5Rendering() {
             onClick={() => navigate('/settings')}
             className="text-xs text-primary underline"
           >
-            Back to settings
+            {t.step5.backToSettings}
           </button>
         </div>
       )}
 
       {job?.status === 'CANCELLED' && (
         <div className="rounded-lg border p-4 text-sm text-muted-foreground">
-          Job was cancelled.
+          {t.step5.cancelled}
         </div>
       )}
     </div>

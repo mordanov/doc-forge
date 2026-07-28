@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
 const LANGUAGES = [
   { id: 'en', name: 'English' },
@@ -24,6 +25,7 @@ const OUTPUT_FORMATS = ['docx', 'pdf', 'html', 'markdown', 'epub'] as const
 export function Step3PublicationConfig() {
   const { draft, setPublicationConfig, applyPreset, goNext, goBack } = useWizardStore()
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const t = useT()
 
   function toggleFormat(fmt: string) {
     const current = draft.outputFormats
@@ -36,12 +38,12 @@ export function Step3PublicationConfig() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-xl font-semibold mb-1">Publication Configuration</h2>
-        <p className="text-sm text-muted-foreground">Choose a preset or configure settings individually</p>
+        <h2 className="text-xl font-semibold mb-1">{t.step3.title}</h2>
+        <p className="text-sm text-muted-foreground">{t.step3.subtitle}</p>
       </div>
 
       <section className="space-y-3">
-        <Label className="text-sm font-semibold">Preset</Label>
+        <Label className="text-sm font-semibold">{t.step3.preset}</Label>
         <PresetSelector
           presets={PRESETS}
           selected={draft.presetId}
@@ -50,13 +52,13 @@ export function Step3PublicationConfig() {
       </section>
 
       <section className="space-y-3">
-        <Label className="text-sm font-semibold">Theme</Label>
+        <Label className="text-sm font-semibold">{t.step3.theme}</Label>
         <ThemeGallery selected={draft.template} onChange={(id) => setPublicationConfig({ template: id })} />
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="language">Language</Label>
+          <Label htmlFor="language">{t.step3.language}</Label>
           <Select value={draft.language} onValueChange={(v) => setPublicationConfig({ language: v })}>
             <SelectTrigger id="language">
               <SelectValue />
@@ -68,7 +70,7 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label>Output Formats</Label>
+          <Label>{t.step3.outputFormats}</Label>
           <div className="flex flex-wrap gap-2">
             {OUTPUT_FORMATS.map((fmt) => (
               <button
@@ -85,7 +87,7 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="image-density">Image Density</Label>
+          <Label htmlFor="image-density">{t.step3.imageDensity}</Label>
           <Select value={draft.imageDensity} onValueChange={(v) => setPublicationConfig({ imageDensity: v as typeof draft.imageDensity })}>
             <SelectTrigger id="image-density"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -97,7 +99,7 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="layout-density">Layout Density</Label>
+          <Label htmlFor="layout-density">{t.step3.layoutDensity}</Label>
           <Select value={draft.layoutDensity} onValueChange={(v) => setPublicationConfig({ layoutDensity: v as typeof draft.layoutDensity })}>
             <SelectTrigger id="layout-density"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -109,7 +111,7 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="colour-palette">Colour Palette</Label>
+          <Label htmlFor="colour-palette">{t.step3.colourPalette}</Label>
           <Select value={draft.colourPalette} onValueChange={(v) => setPublicationConfig({ colourPalette: v })}>
             <SelectTrigger id="colour-palette"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -127,7 +129,7 @@ export function Step3PublicationConfig() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="validation-level">Validation Level</Label>
+          <Label htmlFor="validation-level">{t.step3.validationLevel}</Label>
           <Select value={draft.validationLevel} onValueChange={(v) => setPublicationConfig({ validationLevel: v as typeof draft.validationLevel })}>
             <SelectTrigger id="validation-level"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -141,8 +143,8 @@ export function Step3PublicationConfig() {
 
       <div className="flex items-center justify-between">
         <div>
-          <Label htmlFor="offline-mode" className="text-sm">Offline Mode</Label>
-          <p className="text-xs text-muted-foreground">Use only cached resources</p>
+          <Label htmlFor="offline-mode" className="text-sm">{t.step3.offlineMode}</Label>
+          <p className="text-xs text-muted-foreground">{t.step3.offlineModeDesc}</p>
         </div>
         <Switch
           id="offline-mode"
@@ -158,15 +160,15 @@ export function Step3PublicationConfig() {
         aria-expanded={advancedOpen}
       >
         {advancedOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        Advanced Settings
+        {t.step3.advancedSettings}
       </button>
 
       {advancedOpen && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 bg-muted/30">
           {[
-            { id: 'parallel-downloads', label: 'Parallel Downloads', value: draft.parallelDownloads, key: 'parallelDownloads' as const },
-            { id: 'retry-count', label: 'Retry Count', value: draft.retryCount, key: 'retryCount' as const },
-            { id: 'timeout', label: 'Timeout (s)', value: draft.timeout, key: 'timeout' as const },
+            { id: 'parallel-downloads', label: t.step3.parallelDownloads, value: draft.parallelDownloads, key: 'parallelDownloads' as const },
+            { id: 'retry-count', label: t.step3.retryCount, value: draft.retryCount, key: 'retryCount' as const },
+            { id: 'timeout', label: t.step3.timeout, value: draft.timeout, key: 'timeout' as const },
           ].map(({ id, label, value, key }) => (
             <div key={id} className="space-y-1">
               <Label htmlFor={id} className="text-xs">{label}</Label>

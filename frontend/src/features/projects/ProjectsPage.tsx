@@ -4,12 +4,14 @@ import { useProjects } from './services/hooks/useProjects'
 import { ProjectCard } from './ProjectCard'
 import { Button } from '@/components/ui/button'
 import { FilePlus, FolderOpen } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
 const PAGE_SIZE = 20
 
 export default function ProjectsPage() {
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
+  const t = useT()
   const { data: projects, isLoading } = useProjects({
     offset: (page - 1) * PAGE_SIZE,
     limit: PAGE_SIZE,
@@ -20,10 +22,10 @@ export default function ProjectsPage() {
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
+        <h1 className="text-2xl font-bold">{t.projects.title}</h1>
         <Button onClick={() => navigate('/projects/new')}>
           <FilePlus className="h-4 w-4" />
-          New Project
+          {t.projects.newProject}
         </Button>
       </div>
 
@@ -38,10 +40,10 @@ export default function ProjectsPage() {
       {!isLoading && projects && projects.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
           <FolderOpen className="h-12 w-12 opacity-30" />
-          <p className="text-sm">No projects yet</p>
+          <p className="text-sm">{t.projects.noProjects}</p>
           <Button onClick={() => navigate('/projects/new')}>
             <FilePlus className="h-4 w-4" />
-            Create Publication
+            {t.projects.createPublication}
           </Button>
         </div>
       )}
@@ -62,7 +64,7 @@ export default function ProjectsPage() {
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            Previous
+            {t.projects.previous}
           </Button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Button
@@ -81,7 +83,7 @@ export default function ProjectsPage() {
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Next
+            {t.projects.next}
           </Button>
         </div>
       )}

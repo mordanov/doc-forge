@@ -3,17 +3,20 @@ import { Home, FolderOpen, Settings, Info, FilePlus } from 'lucide-react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-
-const NAV_ITEMS = [
-  { to: '/', icon: Home, label: 'Home', end: true },
-  { to: '/projects/new', icon: FilePlus, label: 'New Project' },
-  { to: '/projects', icon: FolderOpen, label: 'Projects' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
-  { to: '/about', icon: Info, label: 'About' },
-]
+import { LangSwitch } from '@/components/LangSwitch'
+import { useT } from '@/hooks/useT'
 
 export function AppLayout() {
   const collapsed = !useMediaQuery('(min-width: 1024px)')
+  const t = useT()
+
+  const NAV_ITEMS = [
+    { to: '/', icon: Home, label: t.nav.home, end: true },
+    { to: '/projects/new', icon: FilePlus, label: t.nav.newProject },
+    { to: '/projects', icon: FolderOpen, label: t.nav.projects },
+    { to: '/settings', icon: Settings, label: t.nav.settings },
+    { to: '/about', icon: Info, label: t.nav.about },
+  ]
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -25,7 +28,7 @@ export function AppLayout() {
           )}
         >
           <div className={cn('flex items-center h-14 px-4 border-b font-bold text-lg', collapsed && 'justify-center px-0')}>
-            {collapsed ? 'DF' : 'DocForge'}
+            {collapsed ? 'DF' : t.appName}
           </div>
           <nav className="flex flex-col gap-1 p-2 flex-1">
             {NAV_ITEMS.map(({ to, icon: Icon, label, end }) => (
@@ -60,6 +63,9 @@ export function AppLayout() {
               )
             ))}
           </nav>
+          <div className={cn('flex items-center border-t p-3', collapsed ? 'justify-center' : 'px-4')}>
+            <LangSwitch />
+          </div>
         </aside>
         <main className="flex-1 overflow-auto">
           <Outlet />

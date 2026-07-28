@@ -1,6 +1,7 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from 'react'
 import { Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/hooks/useT'
 
 interface UploadAreaProps {
   onFile: (file: File) => void
@@ -25,13 +26,15 @@ export function UploadArea({
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
+  const t = useT()
+
   function validate(file: File): string | null {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!accept.includes(ext)) {
-      return `Only ${accept.join(', ')} files are accepted`
+      return t.uploadArea.invalidType
     }
     if (file.size > maxSizeBytes) {
-      return `File exceeds the ${Math.round(maxSizeBytes / 1024 / 1024)} MB limit`
+      return t.uploadArea.tooLarge(`${Math.round(maxSizeBytes / 1024 / 1024)} MB`)
     }
     return null
   }
@@ -76,8 +79,8 @@ export function UploadArea({
       <Upload className="h-10 w-10 text-muted-foreground" />
       {children ?? (
         <>
-          <p className="text-sm font-medium">Drag & drop your .docx file here</p>
-          <p className="text-xs text-muted-foreground">or click to browse — max {Math.round(maxSizeBytes / 1024 / 1024)} MB</p>
+          <p className="text-sm font-medium">{t.uploadArea.cta}</p>
+          <p className="text-xs text-muted-foreground">max {Math.round(maxSizeBytes / 1024 / 1024)} MB</p>
         </>
       )}
       <input

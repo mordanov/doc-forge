@@ -10,6 +10,7 @@ import { FolderOpen, Plus } from 'lucide-react'
 import api from '@/lib/api'
 import type { Project } from '@/types/api'
 import { parseProject } from '@/lib/utils'
+import { useT } from '@/hooks/useT'
 
 function useRecentProjects() {
   return useQuery({
@@ -31,6 +32,7 @@ export default function HomePage() {
   const { setDocument } = useWizardStore()
   const recent = useRecentProjects()
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const t = useT()
 
   function handleFile(file: File) {
     setUploadError(null)
@@ -45,28 +47,28 @@ export default function HomePage() {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-10">
       <section className="space-y-4">
-        <h1 className="text-3xl font-bold">DocForge</h1>
-        <p className="text-muted-foreground">Transform your Word documents into beautifully formatted publications.</p>
+        <h1 className="text-3xl font-bold">{t.appName}</h1>
+        <p className="text-muted-foreground">{t.home.tagline}</p>
         <UploadArea
           onFile={handleFile}
           onError={setUploadError}
           disabled={upload.isPending}
         />
         {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
-        {upload.isPending && <p className="text-sm text-muted-foreground animate-pulse">Uploading…</p>}
+        {upload.isPending && <p className="text-sm text-muted-foreground animate-pulse">{t.home.uploading}</p>}
       </section>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent Projects</h2>
+          <h2 className="text-lg font-semibold">{t.home.recentProjects}</h2>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/projects/new')}>
               <Plus className="h-4 w-4" />
-              New
+              {t.home.newBtn}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/projects')}>
               <FolderOpen className="h-4 w-4" />
-              Browse all
+              {t.home.browseAll}
             </Button>
           </div>
         </div>
@@ -80,7 +82,7 @@ export default function HomePage() {
         {recent.data && recent.data.length === 0 && (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground text-sm">
-              No projects yet. Drop a file above to get started.
+              {t.home.noProjects}
             </CardContent>
           </Card>
         )}

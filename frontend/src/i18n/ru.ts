@@ -1,0 +1,214 @@
+import type { Translations } from './en'
+
+const ru: Translations = {
+  appName: 'DocForge',
+  nav: {
+    home: 'Главная',
+    newProject: 'Новый проект',
+    projects: 'Проекты',
+    settings: 'Настройки',
+    about: 'О программе',
+  },
+
+  login: {
+    subtitle: 'Войдите в свой аккаунт',
+    username: 'Имя пользователя',
+    password: 'Пароль',
+    submit: 'Войти',
+    submitting: 'Вход…',
+    error: 'Ошибка входа. Проверьте данные.',
+    usernameRequired: 'Введите имя пользователя',
+    passwordRequired: 'Введите пароль',
+  },
+
+  home: {
+    tagline: 'Превращайте документы Word в красиво оформленные публикации.',
+    recentProjects: 'Последние проекты',
+    newBtn: 'Новый',
+    browseAll: 'Все проекты',
+    noProjects: 'Проектов пока нет. Перетащите файл выше.',
+    uploading: 'Загрузка…',
+  },
+
+  projects: {
+    title: 'Проекты',
+    newProject: 'Новый проект',
+    createPublication: 'Создать публикацию',
+    noProjects: 'Проектов пока нет',
+    previous: 'Назад',
+    next: 'Вперёд',
+    download: 'Скачать',
+    duplicate: 'Дублировать',
+    open: 'Открыть',
+    delete: 'Удалить',
+    deleteTitle: 'Удалить проект?',
+    deleteDescription: (name: string) =>
+      `«${name}» будет удалён безвозвратно.`,
+    cancel: 'Отмена',
+  },
+
+  settings: {
+    title: 'Настройки',
+    appearance: 'Внешний вид',
+    darkMode: 'Тёмная тема',
+    darkModeDesc: 'Переключение между светлым и тёмным интерфейсом',
+    defaults: 'Значения по умолчанию',
+    defaultLanguage: 'Язык по умолчанию',
+    defaultFormat: 'Формат вывода по умолчанию',
+    defaultTemplate: 'Шаблон по умолчанию',
+    apiKeys: 'API-ключи',
+    openAiKey: 'API-ключ OpenAI',
+    openAiKeyHint: 'Хранится локально. Никогда не передаётся третьим лицам.',
+    save: 'Сохранить',
+    saving: 'Сохранение…',
+    saved: 'Сохранено',
+  },
+
+  about: {
+    title: 'О DocForge',
+    whatTitle: 'Что такое DocForge?',
+    whatBody:
+      'DocForge преобразует документы Word в красиво оформленные публикации с помощью ИИ. Загрузите файл .docx, настройте параметры ИИ и публикации, скачайте готовый результат.',
+    linksTitle: 'Ссылки',
+    github: 'Репозиторий GitHub',
+    docs: 'Документация',
+    contributorsTitle: 'Участники',
+    contributorsBody:
+      'DocForge — проект с открытым исходным кодом. Полный список участников — в репозитории GitHub.',
+    licenceTitle: 'Лицензия',
+    licenceBody: 'DocForge распространяется под',
+    licenceName: 'лицензией MIT',
+    licenceTrail: '. Вы можете свободно использовать, изменять и распространять данное ПО.',
+  },
+
+  wizardNav: {
+    steps: {
+      1: 'Загрузка',
+      2: 'ИИ',
+      3: 'Публикация',
+      4: 'Просмотр',
+      5: 'Создать',
+    },
+    back: 'Назад',
+    next: 'Далее',
+    loading: 'Загрузка…',
+  },
+
+  wizardResume: {
+    title: 'Продолжить проект?',
+    description: (filename: string) =>
+      `У вас есть незавершённый проект — ${filename}. Продолжить с того места?`,
+    startFresh: 'Начать заново',
+    continue: 'Продолжить',
+  },
+
+  step1: {
+    title: 'Загрузка документа',
+    subtitle: 'Выберите файл .docx',
+    uploading: 'Загрузка…',
+    analysing: 'Анализ документа…',
+    uploadFailed: 'Ошибка загрузки. Попробуйте ещё раз.',
+    remove: 'Удалить',
+    stats: {
+      pages: 'Страниц',
+      headings: 'Заголовков',
+      tables: 'Таблиц',
+      images: 'Изображений',
+      words: 'Слов',
+      chapters: 'Глав',
+    },
+  },
+
+  step2: {
+    title: 'Настройка ИИ',
+    subtitle: 'Выберите параметры обработки документа',
+    provider: 'Провайдер ИИ',
+    providerOnly: 'В этой версии поддерживается только OpenAI',
+    model: 'Модель',
+    quality: 'Качество',
+    creativity: 'Креативность',
+    creativityDescriptions: {
+      1: 'Строго фактический — без переработки текста',
+      2: 'Минимальное творческое участие',
+      3: 'Лёгкая редакторская правка',
+      4: 'Небольшая переработка для ясности',
+      5: 'Баланс — умеренное творческое участие',
+      6: 'Улучшенная читаемость и плавность',
+      7: 'Заметная творческая переработка',
+      8: 'Выраженный редакторский голос',
+      9: 'Высокая креативность — существенные изменения',
+      10: 'Максимальная креативность — полностью переосмысленный текст',
+    },
+    qualityOptions: {
+      fast: 'Быстро',
+      balanced: 'Сбалансировано',
+      maximum: 'Максимальное качество',
+    },
+    qualityDescs: {
+      fast: 'Быстрый результат, меньше затрат',
+      balanced: 'Хорошее качество, разумная скорость',
+      maximum: 'Лучший результат, дольше',
+    },
+  },
+
+  step3: {
+    title: 'Параметры публикации',
+    subtitle: 'Выберите шаблон или настройте вручную',
+    preset: 'Шаблон',
+    theme: 'Тема',
+    language: 'Язык',
+    outputFormats: 'Форматы вывода',
+    imageDensity: 'Плотность изображений',
+    layoutDensity: 'Плотность макета',
+    colourPalette: 'Цветовая палитра',
+    validationLevel: 'Уровень проверки',
+    offlineMode: 'Офлайн-режим',
+    offlineModeDesc: 'Использовать только кешированные ресурсы',
+    advancedSettings: 'Расширенные настройки',
+    parallelDownloads: 'Параллельных загрузок',
+    retryCount: 'Попыток повтора',
+    timeout: 'Таймаут (с)',
+  },
+
+  step4: {
+    title: 'Предпросмотр',
+    subtitle: 'Проверьте оценку перед созданием',
+    warnings: (n: number) => `Предупреждений (${n})`,
+    validationPassed: 'Проверка пройдена — ошибок нет',
+    licenceSummary: 'Сводка лицензий',
+    licensed: (n: number, providers: string) => `${n} лицензированных изображений от ${providers}`,
+    unlicensed: (n: number) => `, ${n} могут требовать указания авторства`,
+    generateFailed: 'Не удалось запустить задание. Попробуйте ещё раз.',
+    generate: 'Создать',
+  },
+
+  step5: {
+    title: 'Создание',
+    connectionLost: 'Соединение потеряно — повторное подключение…',
+    download: 'Скачать',
+    viewProjects: 'Все проекты',
+    failed: 'Создание не удалось',
+    cancelled: 'Задание отменено.',
+    backToSettings: 'К настройкам',
+    stages: {
+      UPLOADING: 'Загрузка',
+      LOADING: 'Чтение',
+      ANALYSING: 'Анализ',
+      AI_PROCESSING: 'Обработка ИИ',
+      IMAGE_SEARCH: 'Поиск изображений',
+      IMAGE_DOWNLOAD: 'Загрузка изображений',
+      RENDERING: 'Рендеринг',
+      VALIDATION: 'Проверка',
+      EXPORT: 'Экспорт',
+      FINISHED: 'Готово',
+    },
+  },
+
+  uploadArea: {
+    cta: 'Нажмите или перетащите файл .docx',
+    invalidType: 'Принимаются только файлы .docx',
+    tooLarge: (limit: string) => `Файл превышает ограничение ${limit}`,
+  },
+}
+
+export default ru

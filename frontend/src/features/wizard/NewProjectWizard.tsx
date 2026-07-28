@@ -11,6 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/hooks/useT'
 
 const STEP_COMPONENTS = {
   1: Step1Upload,
@@ -25,6 +26,7 @@ export default function NewProjectWizard() {
   const settingsDefaults = useDefaultsForWizard()
   const [promptShown, setPromptShown] = useState(false)
   const [promptResolved, setPromptResolved] = useState(false)
+  const t = useT()
 
   useEffect(() => {
     if (hasSavedDraft && draft.documentId && !promptResolved) {
@@ -62,15 +64,14 @@ export default function NewProjectWizard() {
       <Dialog open={promptShown} onOpenChange={() => {}}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Resume your project?</DialogTitle>
+            <DialogTitle>{t.wizardResume.title}</DialogTitle>
             <DialogDescription>
-              You have an unfinished project — <strong>{draft.filename ?? 'untitled'}</strong>.
-              Would you like to continue where you left off?
+              {t.wizardResume.description(draft.filename ?? 'untitled')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleStartFresh}>Start fresh</Button>
-            <Button onClick={handleContinue}>Continue</Button>
+            <Button variant="outline" onClick={handleStartFresh}>{t.wizardResume.startFresh}</Button>
+            <Button onClick={handleContinue}>{t.wizardResume.continue}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
