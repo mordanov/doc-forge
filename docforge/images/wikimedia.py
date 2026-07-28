@@ -151,7 +151,9 @@ class WikimediaProvider(ImageProvider):
         await self._rate_limit()
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, headers=_HEADERS) as client:
+        async with httpx.AsyncClient(
+            timeout=30.0, follow_redirects=True, headers=_HEADERS
+        ) as client:
             try:
                 async with client.stream("GET", candidate.url) as response:
                     response.raise_for_status()
