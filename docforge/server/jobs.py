@@ -84,6 +84,8 @@ class JobQueue:
                 finally:
                     conn.close()
 
+                cfg = request.config or {}
+                output_formats: list[str] = cfg.get("output_formats") or ["docx"]
                 output_path = request.output_dir / f"{request.job_id}.docx"
                 request.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -118,7 +120,6 @@ class JobQueue:
                 else:
                     logger.warning("openai_key_missing", hint="Set OPENAI_API_KEY to enable AI")
 
-                cfg = request.config or {}
                 report = await render_pipeline(
                     input_path=request.input_path,
                     output_path=output_path,
@@ -128,9 +129,45 @@ class JobQueue:
                     ai_model=request.ai_model,
                     creativity=request.creativity,
                     on_stage=on_stage,
-                    offline_mode=bool(cfg.get("offlineMode", False)),
-                    image_sources=cfg.get("imageSources") or ["wikimedia"],
+                    offline_mode=bool(cfg.get("offline_mode", False)),
+                    image_sources=cfg.get("image_sources") or ["wikimedia"],
                 )
+
+                # Run additional format exporters after the core pipeline
+                all_output_paths: list[str] = []
+                if report.succeeded():
+                    all_output_paths.append(str(output_path))
+                    model = report.semantic_model
+                    title = Path(request.input_path.name).stem
+                    for fmt in output_formats:
+                        if fmt == "docx":
+                            continue
+                        try:
+                            fmt_path = request.output_dir / f"{request.job_id}.{fmt}"
+                            if fmt == "pdf":
+                                from docforge.exporters.pdf import export as pdf_export
+
+                                pdf_export(output_path, fmt_path)
+                            elif fmt == "html" and model is not None:
+                                from docforge.exporters.html import export as html_export
+
+                                html_export(model, fmt_path, title=title, language=request.language)
+                            elif fmt == "markdown" and model is not None:
+                                from docforge.exporters.markdown import export as md_export
+
+                                md_export(model, fmt_path, title=title)
+                            elif fmt == "epub" and model is not None:
+                                from docforge.exporters.epub import export as epub_export
+
+                                epub_export(model, fmt_path, title=title, language=request.language)
+                            else:
+                                logger.warning("export_fmt_skipped", fmt=fmt)
+                                continue
+                            all_output_paths.append(str(fmt_path))
+                            logger.info("export_done", fmt=fmt, path=str(fmt_path))
+                        except Exception as exc:
+                            logger.warning("export_failed", fmt=fmt, error=str(exc))
+                            report.add_recovered_error(f"Export {fmt} failed: {exc}")
 
                 elapsed = time.monotonic() - start_time
                 conn = store.get_connection(self._db_url)
@@ -143,7 +180,7 @@ class JobQueue:
                             "FINISHED",
                             progress=100,
                             elapsed=elapsed,
-                            output_paths=[str(output_path)],
+                            output_paths=all_output_paths,
                             warnings=report.warnings,
                         )
                         project_name = Path(request.input_path.name).stem
@@ -153,7 +190,7 @@ class JobQueue:
                             job_id=request.job_id,
                             input_filename=request.input_path.name,
                             config=request.config,
-                            output_paths=[str(output_path)],
+                            output_paths=all_output_paths,
                             template=request.template,
                             language=request.language,
                             ai_model=request.ai_model,

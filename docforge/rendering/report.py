@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from docforge.core.document import SemanticModel
 
 
 @dataclass
@@ -20,6 +24,7 @@ class RenderingReport:
     skipped_operations: list[str] = field(default_factory=list)
     fatal_failure: str | None = None
     image_attributions: list[dict] = field(default_factory=list)
+    semantic_model: SemanticModel | None = field(default=None, repr=False)
     started_at: datetime = field(default_factory=datetime.utcnow)
     completed_at: datetime | None = None
 

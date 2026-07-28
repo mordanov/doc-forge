@@ -337,6 +337,7 @@ async def render_pipeline(
             template=template,
         )
 
+        report.semantic_model = model
         on_stage(RenderStage.FINISHED, 100, "Done")
         report.finish()
         logger.info("pipeline_finished", output=str(output_path), warnings=len(report.warnings))
