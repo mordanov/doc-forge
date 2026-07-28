@@ -142,6 +142,22 @@ Open **http://localhost:5173** in your browser. Log in with the same credentials
 
 ---
 
+## Alternative: Docker
+
+Run the full stack (API + frontend) with Docker Compose:
+
+```bash
+cp .env.example .env          # fill in secrets
+docker compose up --build
+```
+
+- API: **http://localhost:8000**
+- Frontend: **http://localhost:80**
+
+Uploads, cache, and rendered output are stored in named Docker volumes and persist across restarts.
+
+---
+
 ## 8. Authenticate (HTTP API)
 
 ```bash
