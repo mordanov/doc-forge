@@ -12,7 +12,10 @@ from docforge.images.wikimedia import WikimediaProvider, _headers
     ("configured", "expected"),
     [
         (None, "DocForge/1.0 (https://github.com/mordanov/doc-forge)"),
-        ("DocForge-Test/1.0 (mailto:maintainer@example.com)", "DocForge-Test/1.0 (mailto:maintainer@example.com)"),
+        (
+            "DocForge-Test/1.0 (mailto:maintainer@example.com)",
+            "DocForge-Test/1.0 (mailto:maintainer@example.com)",
+        ),
         ("   ", "DocForge/1.0 (https://github.com/mordanov/doc-forge)"),
     ],
 )
@@ -32,7 +35,9 @@ async def test_download_sends_configured_user_agent_and_referer(monkeypatch, tmp
     user_agent = "DocForge-Test/1.0 (mailto:maintainer@example.com)"
     monkeypatch.setenv("DOCFORGE_WIKIMEDIA_USER_AGENT", user_agent)
     route = respx.get(url).mock(
-        return_value=httpx.Response(200, content=b"image data", headers={"Content-Type": "image/jpeg"})
+        return_value=httpx.Response(
+            200, content=b"image data", headers={"Content-Type": "image/jpeg"}
+        )
     )
     candidate = ImageCandidate(
         provider="wikimedia",
@@ -50,4 +55,3 @@ async def test_download_sends_configured_user_agent_and_referer(monkeypatch, tmp
     request = route.calls.last.request
     assert request.headers["User-Agent"] == user_agent
     assert request.headers["Referer"] == source_page
-
