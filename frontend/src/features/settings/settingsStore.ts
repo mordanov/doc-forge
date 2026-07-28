@@ -3,9 +3,17 @@ import { persist } from 'zustand/middleware'
 import { useThemeStore } from '@/stores/themeStore'
 import type { AppSettings, OutputFormat } from '@/types/ui'
 
+const SUPPORTED_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'ru']
+
+function detectBrowserLanguage(): string {
+  const lang = (typeof navigator !== 'undefined' ? navigator.language : '') || ''
+  const code = lang.split('-')[0].toLowerCase()
+  return SUPPORTED_LANGUAGES.includes(code) ? code : 'en'
+}
+
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
-  defaultLanguage: 'en',
+  defaultLanguage: detectBrowserLanguage(),
   defaultOutputFormat: 'docx',
   defaultTemplate: 'minimal',
   openAiApiKey: null,

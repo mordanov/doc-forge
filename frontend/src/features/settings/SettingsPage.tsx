@@ -13,6 +13,8 @@ const LANGUAGES = [
   { id: 'es', name: 'Spanish' },
   { id: 'fr', name: 'French' },
   { id: 'de', name: 'German' },
+  { id: 'it', name: 'Italian' },
+  { id: 'ru', name: 'Russian' },
 ]
 
 const OUTPUT_FORMATS = [
