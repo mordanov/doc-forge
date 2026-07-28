@@ -20,6 +20,7 @@ def load_prompt(prompt_id: str, prompts_dir: Path | None = None) -> Prompt:
 
     search_dirs = [prompts_dir] if prompts_dir else []
     search_dirs.append(_default_prompts_dir())
+    search_dirs.append(Path(__file__).parent / "builtin")
 
     for directory in search_dirs:
         path = directory / f"{prompt_id}.yaml"
