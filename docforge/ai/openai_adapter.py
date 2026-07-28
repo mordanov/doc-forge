@@ -29,6 +29,10 @@ class OpenAIAdapter(AIProvider):
     def provider_id(self) -> str:
         return "openai"
 
+    @property
+    def supported_models(self) -> list[str]:
+        return ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
+
     def _temperature(self, creativity: int) -> float:
         creativity = max(1, min(10, creativity))
         return (creativity - 1) / 9.0

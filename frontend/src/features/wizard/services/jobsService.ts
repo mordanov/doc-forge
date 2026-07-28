@@ -18,7 +18,7 @@ export async function getEstimate(req: JobSubmitRequest): Promise<JobEstimate> {
 }
 
 export function downloadJob(jobId: string, fmt: string): void {
-  const url = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/jobs/${jobId}/download?format=${fmt}`
+  const url = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/jobs/${jobId}/download/${fmt}`
   const a = document.createElement('a')
   a.href = url
   a.download = ''

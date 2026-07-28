@@ -87,7 +87,7 @@ export const handlers = [
     })
   }),
 
-  http.get('/jobs/:jobId/download', () =>
+  http.get('/jobs/:jobId/download/:fmt', () =>
     new HttpResponse(new Blob(['mock content'], { type: 'application/octet-stream' }), {
       headers: { 'Content-Disposition': 'attachment; filename="output.docx"' },
     })

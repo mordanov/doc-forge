@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -107,11 +108,21 @@ class JobQueue:
                     finally:
                         c.close()
 
+                ai_provider = None
+                openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+                if openai_key:
+                    from docforge.ai.openai_adapter import OpenAIAdapter
+
+                    ai_provider = OpenAIAdapter(api_key=openai_key)
+                else:
+                    logger.warning("openai_key_missing", hint="Set OPENAI_API_KEY to enable AI")
+
                 report = await render_pipeline(
                     input_path=request.input_path,
                     output_path=output_path,
                     template=request.template,
                     language=request.language,
+                    ai_provider=ai_provider,
                     ai_model=request.ai_model,
                     creativity=request.creativity,
                     on_stage=on_stage,

@@ -13,4 +13,4 @@ RUN mkdir -p .docforge/uploads .docforge/cache output
 
 EXPOSE 8000
 
-CMD ["docforge", "server", "start", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["docforge", "server", "start", "--host", "0.0.0.0", "--port", "8000", "--upload-dir", "/app/.docforge/uploads", "--output-dir", "/app/output"]
