@@ -122,6 +122,23 @@ async def download_job(job_id: str, fmt: str, request: Request) -> FileResponse:
     if not output_paths:
         raise HTTPException(status_code=404, detail="No output files for this job")
 
+    ext_for_fmt = "md" if fmt == "markdown" else fmt
+
+    # Prefer a pre-generated file from the worker (exact extension match)
+    pre_generated = next(
+        (Path(p) for p in output_paths if Path(p).suffix.lstrip(".") == ext_for_fmt),
+        None,
+    )
+    if pre_generated and pre_generated.exists():
+        stem = Path(job.get("input_filename", job_id)).stem
+        download_name = f"docforged-{stem}.{ext_for_fmt}"
+        return FileResponse(
+            path=str(pre_generated),
+            media_type=_MEDIA_TYPES[fmt],
+            filename=download_name,
+        )
+
+    # Fall back to on-demand conversion from the docx output
     docx_path = Path(output_paths[0])
     if not docx_path.exists():
         raise HTTPException(status_code=404, detail="Output file not found on disk")
