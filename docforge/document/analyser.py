@@ -68,9 +68,7 @@ def _is_placeholder_line(text: str, extra_re: re.Pattern | None) -> bool:
         return True
     if _STRUCTURAL_PLACEHOLDER_RE.match(text):
         return True
-    if extra_re and extra_re.search(text):
-        return True
-    return False
+    return bool(extra_re and extra_re.search(text))
 
 
 def analyse(
