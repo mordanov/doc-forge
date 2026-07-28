@@ -1,6 +1,6 @@
 # Data Model: DocForge Frontend Application
 
-**Feature**: `002-frontend-app`  
+**Feature**: `002-frontend-app`
 **Date**: 2026-07-27
 
 All types are TypeScript interfaces reflecting the **actual** backend API response shapes (not the contract documentation — see `research.md` §7 for divergence notes).
@@ -105,7 +105,7 @@ type RenderStage =
   | 'FINISHED';
 ```
 
-**Source**: `GET /jobs/{job_id}`  
+**Source**: `GET /jobs/{job_id}`
 **Note**: `output_paths` and `warnings` arrive as JSON-encoded strings and must be parsed by the API client layer.
 
 ---
@@ -198,7 +198,7 @@ interface Theme {
 }
 ```
 
-**Source**: `GET /system/themes`  
+**Source**: `GET /system/themes`
 **Note**: The backend does not return `name`, `description`, or preview images. Display names and descriptions must be maintained as frontend constants keyed by `id`.
 
 ---

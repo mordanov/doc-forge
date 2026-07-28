@@ -1,7 +1,7 @@
 # Research: DocForge Frontend Application
 
-**Feature**: `002-frontend-app`  
-**Date**: 2026-07-27  
+**Feature**: `002-frontend-app`
+**Date**: 2026-07-27
 **Status**: Complete — all NEEDS CLARIFICATION resolved
 
 ---
@@ -28,7 +28,7 @@ frontend/
     types/         # Shared TypeScript interfaces
 ```
 
-**Rationale**: Colocation prevents "where does this file live" decisions. Shared `components/` only for things used across ≥2 features.  
+**Rationale**: Colocation prevents "where does this file live" decisions. Shared `components/` only for things used across ≥2 features.
 **Alternatives considered**: Layer-based (`components/`, `hooks/`, `services/` at root) — rejected; breaks down at 5+ features as cross-feature dependencies accumulate.
 
 ---
@@ -41,7 +41,7 @@ frontend/
 - 401 responses trigger automatic logout via a response interceptor.
 - All `output_paths` and `warnings` fields from the jobs API are JSON-encoded strings; the API layer must parse them before returning to the UI.
 
-**Rationale**: Single Axios instance = one place for auth headers, one place for 401 handling. Service functions remain pure (no React hooks) and are independently testable.  
+**Rationale**: Single Axios instance = one place for auth headers, one place for 401 handling. Service functions remain pure (no React hooks) and are independently testable.
 **Alternatives considered**: `fetch` + `useSWR` — rejected in favour of the specified TanStack Query stack.
 
 ---
@@ -50,7 +50,7 @@ frontend/
 
 **Decision**: Minimal Zustand. Two global stores only: `authStore` (JWT token, user) and `themeStore` (light/dark preference). All server data lives in TanStack Query cache. Wizard draft state lives in a `wizardStore` Zustand slice (persisted to `sessionStorage` so a refresh during the wizard does not lose work).
 
-**Rule**: If it's server data, it's TanStack Query. If it's local to one component, it's `useState`. Zustand only for cross-route client state.  
+**Rule**: If it's server data, it's TanStack Query. If it's local to one component, it's `useState`. Zustand only for cross-route client state.
 **Rationale**: Prevents Zustand becoming a second cache layer fighting TanStack Query — the most common mistake with this stack.
 
 ---
@@ -69,7 +69,7 @@ frontend/
 /login               → LoginPage (no auth guard)
 ```
 
-**Decision — wizard routing**: The 5-step wizard lives at `/projects/new` as a single route. Step transitions are internal state. No `/step-1`, `/step-2` sub-routes.  
+**Decision — wizard routing**: The 5-step wizard lives at `/projects/new` as a single route. Step transitions are internal state. No `/step-1`, `/step-2` sub-routes.
 **Rationale**: Per-step routes add URL management, back-button edge cases, and state serialization overhead with no user benefit for a creation wizard.
 
 ---
@@ -91,7 +91,7 @@ frontend/
 // src/components/AppButton.tsx   ← project extension with additional props
 ```
 
-Use `cn()` from `lib/utils.ts` for all conditional class composition.  
+Use `cn()` from `lib/utils.ts` for all conditional class composition.
 **Rationale**: Wrapping keeps primitives clean and upgradeable. Direct modification makes CLI-driven updates painful.
 
 ---
@@ -120,26 +120,26 @@ The research agent audited the live backend source code. Key gaps between the co
 
 ## 8. Form Management
 
-**Decision**: React Hook Form + Zod for all forms. Zod schemas defined adjacent to the form component. `zodResolver` connects the two.  
+**Decision**: React Hook Form + Zod for all forms. Zod schemas defined adjacent to the form component. `zodResolver` connects the two.
 **Rationale**: The specification mandates RHF + Zod. Immediate validation feedback (SC-007) is satisfied by RHF's `mode: 'onChange'`.
 
 ---
 
 ## 9. Animation
 
-**Decision**: Framer Motion for page transitions, wizard step transitions, and card animations. CSS transitions for hover/focus states (no Framer overhead for simple states).  
+**Decision**: Framer Motion for page transitions, wizard step transitions, and card animations. CSS transitions for hover/focus states (no Framer overhead for simple states).
 **Rationale**: The specification mandates Framer Motion. Keep animations subtle — 200–300ms ease-out for most transitions.
 
 ---
 
 ## 10. Testing
 
-**Decision**: Vitest + React Testing Library for unit/component tests. Playwright for end-to-end. Mock Service Worker (MSW) for API mocking in tests.  
+**Decision**: Vitest + React Testing Library for unit/component tests. Playwright for end-to-end. Mock Service Worker (MSW) for API mocking in tests.
 **Rationale**: Vitest integrates natively with Vite (same config, same transforms). MSW enables realistic API mocking without touching test code when endpoint shapes change.
 
 ---
 
 ## 11. Build & Dev
 
-**Decision**: Vite 6 (bundler), `import.meta.env.VITE_API_URL` for the backend base URL. Proxy to backend during development via `vite.config.ts` `server.proxy`.  
+**Decision**: Vite 6 (bundler), `import.meta.env.VITE_API_URL` for the backend base URL. Proxy to backend during development via `vite.config.ts` `server.proxy`.
 **Rationale**: The specification mandates Vite. The proxy avoids CORS configuration during local development.

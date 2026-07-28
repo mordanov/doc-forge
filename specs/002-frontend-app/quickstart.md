@@ -1,6 +1,6 @@
 # Quickstart: DocForge Frontend Application
 
-**Feature**: `002-frontend-app`  
+**Feature**: `002-frontend-app`
 **Date**: 2026-07-27
 
 Integration scenarios for end-to-end testing and developer onboarding.

@@ -1,6 +1,6 @@
 # UI Contracts: DocForge Frontend Application
 
-**Feature**: `002-frontend-app`  
+**Feature**: `002-frontend-app`
 **Date**: 2026-07-27
 
 These contracts define the interface between the UI layer and the data/API layer. They are the agreed boundaries for component development.

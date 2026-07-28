@@ -1,8 +1,8 @@
 # Feature Specification: DocForge Frontend Application
 
-**Feature Branch**: `002-frontend-app`  
-**Created**: 2026-07-27  
-**Status**: Draft  
+**Feature Branch**: `002-frontend-app`
+**Created**: 2026-07-27
+**Status**: Draft
 **Input**: User description: "@documentation/frontend-specification.md"
 
 ## User Scenarios & Testing *(mandatory)*

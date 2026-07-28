@@ -1,6 +1,6 @@
 # Implementation Plan: DocForge Frontend Application
 
-**Branch**: `002-frontend-app` | **Date**: 2026-07-27 | **Spec**: [spec.md](spec.md)  
+**Branch**: `002-frontend-app` | **Date**: 2026-07-27 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `specs/002-frontend-app/spec.md`
 
 ## Summary
@@ -9,20 +9,20 @@ Build a production-quality React 19 + TypeScript SPA that provides the full user
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, Node.js 20 LTS  
-**Framework**: React 19 + Vite 6  
-**UI Library**: TailwindCSS 3 + shadcn/ui (Radix primitives)  
-**State**: Zustand (auth + theme + wizard draft), TanStack Query v5 (server state)  
-**Routing**: React Router v6.4+ (`createBrowserRouter`)  
-**Forms**: React Hook Form + Zod  
-**Animation**: Framer Motion  
-**Icons**: Lucide React  
-**HTTP**: Axios + TanStack Query  
-**Testing**: Vitest + React Testing Library + Playwright + MSW  
-**Storage**: `localStorage` for auth token and settings; `sessionStorage` for wizard draft  
-**Target Platform**: Desktop/laptop browsers (Chrome, Firefox, Safari, Edge); 13"+ screen  
-**Performance Goals**: All pages interactive in < 2 seconds on standard broadband; form validation feedback within 1 second  
-**Constraints**: WCAG AA accessibility; dark/light mode with zero flash-of-wrong-theme; no server-side rendering  
+**Language/Version**: TypeScript 5.x, Node.js 20 LTS
+**Framework**: React 19 + Vite 6
+**UI Library**: TailwindCSS 3 + shadcn/ui (Radix primitives)
+**State**: Zustand (auth + theme + wizard draft), TanStack Query v5 (server state)
+**Routing**: React Router v6.4+ (`createBrowserRouter`)
+**Forms**: React Hook Form + Zod
+**Animation**: Framer Motion
+**Icons**: Lucide React
+**HTTP**: Axios + TanStack Query
+**Testing**: Vitest + React Testing Library + Playwright + MSW
+**Storage**: `localStorage` for auth token and settings; `sessionStorage` for wizard draft
+**Target Platform**: Desktop/laptop browsers (Chrome, Firefox, Safari, Edge); 13"+ screen
+**Performance Goals**: All pages interactive in < 2 seconds on standard broadband; form validation feedback within 1 second
+**Constraints**: WCAG AA accessibility; dark/light mode with zero flash-of-wrong-theme; no server-side rendering
 **Scale/Scope**: Single-user (admin); 5 pages; 5-step wizard; ~40 React components
 
 ## Constitution Check

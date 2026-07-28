@@ -48,28 +48,46 @@ class OpenAIAdapter(AIProvider):
 
         rendered_prompt = Template(prompt.template).render(**context.fields)
         temperature = self._temperature(creativity)
+        include_temperature = temperature != 1.0
+        retries_used = 0
 
-        for attempt in range(1, self._max_retries + 1):
+        while retries_used < self._max_retries:
             try:
-                response = await self._client.chat.completions.create(
-                    model=model,
-                    temperature=temperature,
-                    messages=[{"role": "user", "content": rendered_prompt}],
-                    response_format={"type": "json_object"},
-                )
+                kwargs: dict = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": rendered_prompt}],
+                    "response_format": {"type": "json_object"},
+                }
+                if include_temperature:
+                    kwargs["temperature"] = temperature
+                response = await self._client.chat.completions.create(**kwargs)
                 raw = response.choices[0].message.content or ""
                 data = json.loads(raw)
                 return self._validate_and_build(data, context.chapter_id)
             except AIResponseValidationError:
                 raise
             except OpenAIError as exc:
+                error_str = str(exc)
+                if (
+                    include_temperature
+                    and "unsupported_value" in error_str
+                    and "temperature" in error_str
+                ):
+                    logger.warning(
+                        "openai_temperature_unsupported",
+                        model=model,
+                        hint="model rejects non-default temperature; retrying without it",
+                    )
+                    include_temperature = False
+                    continue
+                retries_used += 1
                 logger.warning(
                     "openai_attempt_failed",
-                    attempt=attempt,
+                    attempt=retries_used,
                     max_retries=self._max_retries,
-                    error=str(exc),
+                    error=error_str,
                 )
-                if attempt == self._max_retries:
+                if retries_used >= self._max_retries:
                     logger.error("openai_exhausted_retries", chapter_id=context.chapter_id)
                     return DefaultRenderingDecision.for_chapter(context.chapter_id)
             except Exception as exc:
