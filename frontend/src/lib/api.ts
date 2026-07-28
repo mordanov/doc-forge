@@ -9,7 +9,8 @@ api.interceptors.request.use((config) => {
   const raw = localStorage.getItem('auth')
   if (raw) {
     try {
-      const { token } = JSON.parse(raw) as { token: string }
+      const parsed = JSON.parse(raw) as { state?: { token?: string }; token?: string }
+      const token = parsed.state?.token ?? parsed.token
       if (token) config.headers.Authorization = `Bearer ${token}`
     } catch {
       // ignore malformed storage
