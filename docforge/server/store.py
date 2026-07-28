@@ -169,7 +169,7 @@ def get_job(conn: psycopg2.extensions.connection, job_id: str) -> dict | None:
 def delete_job(conn: psycopg2.extensions.connection, job_id: str) -> bool:
     with conn, conn.cursor() as cur:
         cur.execute("DELETE FROM jobs WHERE id = %s", (job_id,))
-        return cur.rowcount > 0
+        return bool(cur.rowcount > 0)
 
 
 # ---------------------------------------------------------------------------
@@ -237,4 +237,4 @@ def get_project(conn: psycopg2.extensions.connection, project_id: str) -> dict |
 def delete_project(conn: psycopg2.extensions.connection, project_id: str) -> bool:
     with conn, conn.cursor() as cur:
         cur.execute("DELETE FROM projects WHERE id = %s", (project_id,))
-        return cur.rowcount > 0
+        return bool(cur.rowcount > 0)
