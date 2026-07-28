@@ -3,11 +3,11 @@ FROM python:3.13-slim
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || pip install --no-cache-dir -e .
-
 COPY docforge/ ./docforge/
 COPY prompts/ ./prompts/
 COPY examples/ ./examples/
+
+RUN pip install --no-cache-dir .
 
 RUN mkdir -p .docforge/uploads .docforge/cache output
 
