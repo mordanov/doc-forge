@@ -61,7 +61,7 @@ export function Step5Rendering() {
 
   async function handleDownload() {
     if (!draft.activeJobId) return
-    const fmt = draft.outputFormats[0] ?? 'docx'
+    const fmt = draft.outputFormat ?? 'docx'
     await downloadJob(draft.activeJobId, fmt)
   }
 

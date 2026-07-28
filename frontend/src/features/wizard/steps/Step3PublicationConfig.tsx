@@ -29,20 +29,12 @@ export function Step3PublicationConfig() {
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const t = useT()
 
-  function toggleFormat(fmt: string) {
-    const current = draft.outputFormats
-    const updated = current.includes(fmt as typeof OUTPUT_FORMATS[number])
-      ? current.filter((f) => f !== fmt)
-      : [...current, fmt as typeof OUTPUT_FORMATS[number]]
-    if (updated.length > 0) setPublicationConfig({ outputFormats: updated })
+  function selectFormat(fmt: typeof OUTPUT_FORMATS[number]) {
+    setPublicationConfig({ outputFormat: fmt })
   }
 
-  function toggleSource(src: string) {
-    const current = draft.imageSources
-    const updated = current.includes(src)
-      ? current.filter((s) => s !== src)
-      : [...current, src]
-    if (updated.length > 0) setPublicationConfig({ imageSources: updated })
+  function selectSource(src: string) {
+    setPublicationConfig({ imageSource: src })
   }
 
   return (
@@ -98,9 +90,9 @@ export function Step3PublicationConfig() {
               <button
                 key={fmt}
                 type="button"
-                aria-pressed={draft.outputFormats.includes(fmt)}
-                onClick={() => toggleFormat(fmt)}
-                className={`rounded border px-3 py-1 text-xs transition-colors ${draft.outputFormats.includes(fmt) ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'}`}
+                aria-pressed={draft.outputFormat === fmt}
+                onClick={() => selectFormat(fmt)}
+                className={`rounded border px-3 py-1 text-xs transition-colors ${draft.outputFormat === fmt ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'}`}
               >
                 {fmt.toUpperCase()}
               </button>
@@ -301,22 +293,17 @@ export function Step3PublicationConfig() {
           <HintIcon text={t.step3.hints.imageSources} />
         </div>
         <div className="flex flex-wrap gap-2">
-          {IMAGE_SOURCES.map((src) => {
-            const isSelected = draft.imageSources.includes(src)
-            const isLastSelected = isSelected && draft.imageSources.length === 1
-            return (
-              <button
-                key={src}
-                type="button"
-                aria-pressed={isSelected}
-                disabled={isLastSelected}
-                onClick={() => toggleSource(src)}
-                className={`rounded border px-3 py-1 text-xs transition-colors capitalize ${isSelected ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'} ${isLastSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {src}
-              </button>
-            )
-          })}
+          {IMAGE_SOURCES.map((src) => (
+            <button
+              key={src}
+              type="button"
+              aria-pressed={draft.imageSource === src}
+              onClick={() => selectSource(src)}
+              className={`rounded border px-3 py-1 text-xs transition-colors capitalize ${draft.imageSource === src ? 'border-primary bg-accent font-medium' : 'hover:bg-accent'}`}
+            >
+              {src}
+            </button>
+          ))}
         </div>
         <p className="text-xs text-muted-foreground">{t.step3.imageSourcesDesc}</p>
       </div>

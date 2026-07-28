@@ -16,10 +16,10 @@ export interface WizardDraft {
   creativity: number
   presetId: string | null
   template: string
-  outputFormats: OutputFormat[]
+  outputFormat: OutputFormat
   language: string
   imagePolicy: ImagePolicy
-  imageSources: string[]
+  imageSource: string
   imageDensity: 'minimal' | 'balanced' | 'illustrated' | 'maximum'
   layoutDensity: 'compact' | 'balanced' | 'spacious'
   typography: string

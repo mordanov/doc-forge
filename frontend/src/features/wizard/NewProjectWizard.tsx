@@ -35,7 +35,7 @@ export default function NewProjectWizard() {
       setPublicationConfig({
         language: settingsDefaults.language,
         template: settingsDefaults.template,
-        outputFormats: [settingsDefaults.outputFormat],
+        outputFormat: settingsDefaults.outputFormat,
       })
       setPromptResolved(true)
     }
@@ -51,7 +51,7 @@ export default function NewProjectWizard() {
     setPublicationConfig({
       language: settingsDefaults.language,
       template: settingsDefaults.template,
-      outputFormats: [settingsDefaults.outputFormat],
+      outputFormat: settingsDefaults.outputFormat,
     })
     setPromptShown(false)
     setPromptResolved(true)

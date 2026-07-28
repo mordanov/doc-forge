@@ -21,9 +21,9 @@ export function Step4Preview() {
       ai_model: draft.aiModel,
       creativity: draft.creativity,
       config: {
-        output_formats: draft.outputFormats,
+        output_formats: [draft.outputFormat],
         image_policy: draft.imagePolicy,
-        image_sources: draft.imageSources,
+        image_sources: [draft.imageSource],
         image_density: draft.imageDensity,
         layout_density: draft.layoutDensity,
         typography: draft.typography,
