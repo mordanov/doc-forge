@@ -1,4 +1,5 @@
 """Unit tests for server/auth.py — no DB required."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta

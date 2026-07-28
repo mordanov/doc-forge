@@ -24,7 +24,9 @@ def test_output_has_cover_and_toc():
     with tempfile.TemporaryDirectory() as tmp:
         out = _render_sample(Path(tmp))
         doc = docxlib.Document(str(out))
-        headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+        headings = [
+            p.text for p in doc.paragraphs if p.style and p.style.name.startswith("Heading")
+        ]
         assert "Table of Contents" in headings
 
 
@@ -33,7 +35,9 @@ def test_output_has_image_sources_appendix():
     with tempfile.TemporaryDirectory() as tmp:
         out = _render_sample(Path(tmp))
         doc = docxlib.Document(str(out))
-        headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+        headings = [
+            p.text for p in doc.paragraphs if p.style and p.style.name.startswith("Heading")
+        ]
         assert "Image Sources" in headings
 
 
@@ -42,7 +46,7 @@ def test_output_heading_hierarchy():
     with tempfile.TemporaryDirectory() as tmp:
         out = _render_sample(Path(tmp))
         doc = docxlib.Document(str(out))
-        h1s = [p.text for p in doc.paragraphs if p.style.name == "Heading 1"]
+        h1s = [p.text for p in doc.paragraphs if p.style and p.style.name == "Heading 1"]
         # Should have at least Introduction, one chapter, and Image Sources
         assert len(h1s) >= 2
 
@@ -53,7 +57,9 @@ def test_output_has_paragraphs():
         out = _render_sample(Path(tmp))
         doc = docxlib.Document(str(out))
         body_paragraphs = [
-            p for p in doc.paragraphs if p.text.strip() and not p.style.name.startswith("Heading")
+            p
+            for p in doc.paragraphs
+            if p.text.strip() and not (p.style and p.style.name.startswith("Heading"))
         ]
         assert len(body_paragraphs) >= 3
 
@@ -68,8 +74,10 @@ def test_golden_heading_count_matches():
         actual = docxlib.Document(str(out))
         expected = docxlib.Document(str(EXPECTED_OUTPUT))
 
-        actual_h1s = [p.text for p in actual.paragraphs if p.style.name == "Heading 1"]
-        expected_h1s = [p.text for p in expected.paragraphs if p.style.name == "Heading 1"]
+        actual_h1s = [p.text for p in actual.paragraphs if p.style and p.style.name == "Heading 1"]
+        expected_h1s = [
+            p.text for p in expected.paragraphs if p.style and p.style.name == "Heading 1"
+        ]
         assert len(actual_h1s) == len(expected_h1s), (
             f"H1 count mismatch: got {actual_h1s}, expected {expected_h1s}"
         )

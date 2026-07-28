@@ -1,8 +1,8 @@
 """Unit tests for config/loader.py."""
+
 from __future__ import annotations
 
 import pytest
-import yaml
 
 from docforge.config.loader import _deep_merge, _find_profile, _load_file, load_config
 

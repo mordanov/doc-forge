@@ -115,7 +115,8 @@ async def test_login_invalid_credentials(app_with_user):
 
 async def _login(client: AsyncClient) -> str:
     resp = await client.post("/auth/login", json={"username": "admin", "password": "secret123"})
-    return resp.json()["access_token"]
+    token: str = resp.json()["access_token"]
+    return token
 
 
 @pytest.mark.asyncio

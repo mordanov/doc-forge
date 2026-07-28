@@ -1,10 +1,9 @@
 """Unit tests for server/store.py using mock psycopg2 connections."""
+
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from docforge.server import store
 
@@ -43,13 +42,13 @@ def test_upsert_user_executes_insert():
 
 def test_get_user_returns_dict():
     row = {"id": 1, "username": "admin", "password_hash": "hashed", "created_at": "2024"}
-    conn, cur = _make_conn(fetchone_val=row)
+    conn, _cur = _make_conn(fetchone_val=row)
     result = store.get_user(conn)
     assert result == dict(row)
 
 
 def test_get_user_returns_none_when_missing():
-    conn, cur = _make_conn(fetchone_val=None)
+    conn, _cur = _make_conn(fetchone_val=None)
     result = store.get_user(conn)
     assert result is None
 
@@ -113,13 +112,13 @@ def test_update_job_status_with_warnings():
 
 def test_get_job_returns_dict():
     row = {"id": "j1", "status": "QUEUED"}
-    conn, cur = _make_conn(fetchone_val=row)
+    conn, _cur = _make_conn(fetchone_val=row)
     result = store.get_job(conn, "j1")
     assert result == dict(row)
 
 
 def test_get_job_returns_none():
-    conn, cur = _make_conn(fetchone_val=None)
+    conn, _cur = _make_conn(fetchone_val=None)
     result = store.get_job(conn, "missing")
     assert result is None
 
@@ -128,12 +127,12 @@ def test_get_job_returns_none():
 
 
 def test_delete_job_returns_true_when_deleted():
-    conn, cur = _make_conn(rowcount=1)
+    conn, _cur = _make_conn(rowcount=1)
     assert store.delete_job(conn, "j1") is True
 
 
 def test_delete_job_returns_false_when_not_found():
-    conn, cur = _make_conn(rowcount=0)
+    conn, _cur = _make_conn(rowcount=0)
     assert store.delete_job(conn, "nope") is False
 
 
@@ -162,7 +161,7 @@ def test_insert_project_returns_uuid():
 
 def test_list_projects_returns_list():
     rows = [{"id": "p1"}, {"id": "p2"}]
-    conn, cur = _make_conn(fetchall_val=rows)
+    conn, _cur = _make_conn(fetchall_val=rows)
     result = store.list_projects(conn)
     assert result == [dict(r) for r in rows]
 
@@ -172,13 +171,13 @@ def test_list_projects_returns_list():
 
 def test_get_project_returns_dict():
     row = {"id": "p1", "name": "Test"}
-    conn, cur = _make_conn(fetchone_val=row)
+    conn, _cur = _make_conn(fetchone_val=row)
     result = store.get_project(conn, "p1")
     assert result == dict(row)
 
 
 def test_get_project_returns_none():
-    conn, cur = _make_conn(fetchone_val=None)
+    conn, _cur = _make_conn(fetchone_val=None)
     result = store.get_project(conn, "missing")
     assert result is None
 
@@ -187,10 +186,10 @@ def test_get_project_returns_none():
 
 
 def test_delete_project_returns_true():
-    conn, cur = _make_conn(rowcount=1)
+    conn, _cur = _make_conn(rowcount=1)
     assert store.delete_project(conn, "p1") is True
 
 
 def test_delete_project_returns_false():
-    conn, cur = _make_conn(rowcount=0)
+    conn, _cur = _make_conn(rowcount=0)
     assert store.delete_project(conn, "p1") is False

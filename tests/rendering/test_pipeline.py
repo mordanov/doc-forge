@@ -22,7 +22,9 @@ def test_render_pipeline_produces_valid_docx():
         assert output.stat().st_size > 0
 
         doc = docxlib.Document(str(output))
-        headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+        headings = [
+            p.text for p in doc.paragraphs if p.style and p.style.name.startswith("Heading")
+        ]
         assert "Table of Contents" in headings
         assert "Image Sources" in headings
         assert len(doc.paragraphs) > 5

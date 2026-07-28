@@ -1,9 +1,9 @@
 """Unit tests for all server routers using a fake app (no DB required)."""
+
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -80,8 +80,10 @@ async def test_login_success(tmp_path):
     app = _make_app(tmp_path)
     user = {"username": "admin", "password_hash": hash_password("secret")}
 
-    with patch("docforge.server.routers.auth.store.get_connection"), \
-         patch("docforge.server.routers.auth.store.get_user", return_value=user):
+    with (
+        patch("docforge.server.routers.auth.store.get_connection"),
+        patch("docforge.server.routers.auth.store.get_user", return_value=user),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.post("/auth/login", json={"username": "admin", "password": "secret"})
     assert r.status_code == 200
@@ -93,8 +95,10 @@ async def test_login_wrong_password(tmp_path):
     app = _make_app(tmp_path)
     user = {"username": "admin", "password_hash": hash_password("correct")}
 
-    with patch("docforge.server.routers.auth.store.get_connection"), \
-         patch("docforge.server.routers.auth.store.get_user", return_value=user):
+    with (
+        patch("docforge.server.routers.auth.store.get_connection"),
+        patch("docforge.server.routers.auth.store.get_user", return_value=user),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.post("/auth/login", json={"username": "admin", "password": "wrong"})
     assert r.status_code == 401
@@ -104,8 +108,10 @@ async def test_login_wrong_password(tmp_path):
 async def test_login_no_user_503(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.auth.store.get_connection"), \
-         patch("docforge.server.routers.auth.store.get_user", return_value=None):
+    with (
+        patch("docforge.server.routers.auth.store.get_connection"),
+        patch("docforge.server.routers.auth.store.get_user", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.post("/auth/login", json={"username": "admin", "password": "x"})
     assert r.status_code == 503
@@ -116,8 +122,10 @@ async def test_login_wrong_username(tmp_path):
     app = _make_app(tmp_path)
     user = {"username": "admin", "password_hash": hash_password("secret")}
 
-    with patch("docforge.server.routers.auth.store.get_connection"), \
-         patch("docforge.server.routers.auth.store.get_user", return_value=user):
+    with (
+        patch("docforge.server.routers.auth.store.get_connection"),
+        patch("docforge.server.routers.auth.store.get_user", return_value=user),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.post("/auth/login", json={"username": "other", "password": "secret"})
     assert r.status_code == 401
@@ -199,8 +207,10 @@ async def test_get_job_requires_auth(tmp_path):
 async def test_get_job_not_found(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=None):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/jobs/missing", headers=AUTH)
     assert r.status_code == 404
@@ -209,14 +219,28 @@ async def test_get_job_not_found(tmp_path):
 @pytest.mark.asyncio
 async def test_get_job_found(tmp_path):
     app = _make_app(tmp_path)
-    job = {"id": "j1", "status": "QUEUED", "stage": "UPLOADING", "progress": 0,
-           "elapsed_seconds": 0, "config_snapshot": "{}", "input_filename": "f.docx",
-           "input_path": "/tmp/f.docx", "output_paths": "[]", "warnings": "[]",
-           "error": None, "created_at": "2024", "started_at": None, "completed_at": None,
-           "project_id": None}
+    job = {
+        "id": "j1",
+        "status": "QUEUED",
+        "stage": "UPLOADING",
+        "progress": 0,
+        "elapsed_seconds": 0,
+        "config_snapshot": "{}",
+        "input_filename": "f.docx",
+        "input_path": "/tmp/f.docx",
+        "output_paths": "[]",
+        "warnings": "[]",
+        "error": None,
+        "created_at": "2024",
+        "started_at": None,
+        "completed_at": None,
+        "project_id": None,
+    }
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=job):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=job),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/jobs/j1", headers=AUTH)
     assert r.status_code == 200
@@ -227,8 +251,10 @@ async def test_get_job_found(tmp_path):
 async def test_delete_job_not_found(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=None):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.delete("/jobs/missing", headers=AUTH)
     assert r.status_code == 404
@@ -239,8 +265,10 @@ async def test_delete_running_job_rejected(tmp_path):
     app = _make_app(tmp_path)
     job = {"id": "j1", "status": "RUNNING"}
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=job):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=job),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.delete("/jobs/j1", headers=AUTH)
     assert r.status_code == 409
@@ -251,9 +279,11 @@ async def test_delete_queued_job_succeeds(tmp_path):
     app = _make_app(tmp_path)
     job = {"id": "j1", "status": "QUEUED"}
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=job), \
-         patch("docforge.server.routers.jobs.store.delete_job", return_value=True):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=job),
+        patch("docforge.server.routers.jobs.store.delete_job", return_value=True),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.delete("/jobs/j1", headers=AUTH)
     assert r.status_code == 204
@@ -271,8 +301,10 @@ async def test_download_job_unsupported_format(tmp_path):
 async def test_download_job_not_found(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=None):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/jobs/ghost/download/docx", headers=AUTH)
     assert r.status_code == 404
@@ -283,8 +315,10 @@ async def test_download_job_not_completed(tmp_path):
     app = _make_app(tmp_path)
     job = {"id": "j1", "status": "RUNNING"}
 
-    with patch("docforge.server.routers.jobs.store.get_connection"), \
-         patch("docforge.server.routers.jobs.store.get_job", return_value=job):
+    with (
+        patch("docforge.server.routers.jobs.store.get_connection"),
+        patch("docforge.server.routers.jobs.store.get_job", return_value=job),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/jobs/j1/download/docx", headers=AUTH)
     assert r.status_code == 409
@@ -323,8 +357,10 @@ async def test_list_projects_requires_auth(tmp_path):
 async def test_list_projects_returns_list(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.projects.store.get_connection"), \
-         patch("docforge.server.routers.projects.store.list_projects", return_value=[]):
+    with (
+        patch("docforge.server.routers.projects.store.get_connection"),
+        patch("docforge.server.routers.projects.store.list_projects", return_value=[]),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/projects", headers=AUTH)
     assert r.status_code == 200
@@ -335,8 +371,10 @@ async def test_list_projects_returns_list(tmp_path):
 async def test_get_project_not_found(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.projects.store.get_connection"), \
-         patch("docforge.server.routers.projects.store.get_project", return_value=None):
+    with (
+        patch("docforge.server.routers.projects.store.get_connection"),
+        patch("docforge.server.routers.projects.store.get_project", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/projects/nope", headers=AUTH)
     assert r.status_code == 404
@@ -345,14 +383,25 @@ async def test_get_project_not_found(tmp_path):
 @pytest.mark.asyncio
 async def test_get_project_found(tmp_path):
     app = _make_app(tmp_path)
-    project = {"id": "p1", "name": "Test Project", "job_id": "j1",
-               "input_filename": "f.docx", "config_snapshot": "{}",
-               "output_paths": "[]", "template": "minimal", "language": "en",
-               "ai_model": "gpt-4o", "status": "COMPLETED",
-               "created_at": "2024", "completed_at": "2024"}
+    project = {
+        "id": "p1",
+        "name": "Test Project",
+        "job_id": "j1",
+        "input_filename": "f.docx",
+        "config_snapshot": "{}",
+        "output_paths": "[]",
+        "template": "minimal",
+        "language": "en",
+        "ai_model": "gpt-4o",
+        "status": "COMPLETED",
+        "created_at": "2024",
+        "completed_at": "2024",
+    }
 
-    with patch("docforge.server.routers.projects.store.get_connection"), \
-         patch("docforge.server.routers.projects.store.get_project", return_value=project):
+    with (
+        patch("docforge.server.routers.projects.store.get_connection"),
+        patch("docforge.server.routers.projects.store.get_project", return_value=project),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.get("/projects/p1", headers=AUTH)
     assert r.status_code == 200
@@ -363,8 +412,10 @@ async def test_get_project_found(tmp_path):
 async def test_delete_project_not_found(tmp_path):
     app = _make_app(tmp_path)
 
-    with patch("docforge.server.routers.projects.store.get_connection"), \
-         patch("docforge.server.routers.projects.store.get_project", return_value=None):
+    with (
+        patch("docforge.server.routers.projects.store.get_connection"),
+        patch("docforge.server.routers.projects.store.get_project", return_value=None),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.delete("/projects/nope", headers=AUTH)
     assert r.status_code == 404
@@ -375,9 +426,11 @@ async def test_delete_project_success(tmp_path):
     app = _make_app(tmp_path)
     project = {"id": "p1", "name": "T", "output_paths": "[]"}
 
-    with patch("docforge.server.routers.projects.store.get_connection"), \
-         patch("docforge.server.routers.projects.store.get_project", return_value=project), \
-         patch("docforge.server.routers.projects.store.delete_project", return_value=True):
+    with (
+        patch("docforge.server.routers.projects.store.get_connection"),
+        patch("docforge.server.routers.projects.store.get_project", return_value=project),
+        patch("docforge.server.routers.projects.store.delete_project", return_value=True),
+    ):
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
             r = await c.delete("/projects/p1", headers=AUTH)
     assert r.status_code == 204

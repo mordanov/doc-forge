@@ -66,6 +66,7 @@ def test_upsert_user_overwrites(db):
         store.upsert_user(conn, "admin", "hash1")
         store.upsert_user(conn, "admin2", "hash2")
         user = store.get_user(conn)
+        assert user is not None
         assert user["username"] == "admin2"
         assert user["password_hash"] == "hash2"
     finally:
@@ -83,6 +84,7 @@ def test_job_lifecycle(db):
 
         store.update_job_status(conn, "job-1", "RUNNING", "ANALYSING", progress=15, elapsed=1.5)
         job = store.get_job(conn, "job-1")
+        assert job is not None
         assert job["status"] == "RUNNING"
         assert job["progress"] == 15
 
@@ -90,6 +92,7 @@ def test_job_lifecycle(db):
             conn, "job-1", "COMPLETED", "FINISHED", progress=100, output_paths=["/tmp/output.docx"]
         )
         job = store.get_job(conn, "job-1")
+        assert job is not None
         assert job["status"] == "COMPLETED"
         assert job["completed_at"] is not None
     finally:
@@ -114,6 +117,7 @@ def test_project_crud(db):
         assert pid is not None
 
         project = store.get_project(conn, pid)
+        assert project is not None
         assert project["name"] == "Test Project"
         assert project["template"] == "minimal"
 

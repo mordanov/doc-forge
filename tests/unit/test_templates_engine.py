@@ -1,4 +1,5 @@
 """Unit tests for templates/engine.py."""
+
 from __future__ import annotations
 
 import pytest
