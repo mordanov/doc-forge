@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: .env
+    environment:
+      - DOCFORGE_SERVER_HOST=0.0.0.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - docforge_uploads:.docforge/uploads
+      - docforge_cache:.docforge/cache
+      - docforge_output:output
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  docforge_uploads:
+  docforge_cache:
+  docforge_output:

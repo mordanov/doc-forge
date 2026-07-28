@@ -6,7 +6,8 @@ This guide walks through a complete installation, from setup to a rendered publi
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.13+
+- Node.js 20+ and pnpm 9+ (for the frontend)
 - `pip` or `uv`
 - An OpenAI API key
 - (Optional) Unsplash / Pexels API keys for additional image sources
@@ -76,7 +77,7 @@ docforge doctor
 
 Expected output:
 ```
-✓ Python 3.11.x
+✓ Python 3.13.x
 ✓ Dependencies installed
 ✓ User account provisioned
 ✓ OpenAI API key valid
@@ -121,6 +122,23 @@ Expected: human-readable report with chapter list, placeholder inventory, statis
 ```bash
 docforge server start
 ```
+
+---
+
+## 7a. Start the frontend (optional)
+
+The web UI requires Node.js 20+ and pnpm 9.
+
+```bash
+cd frontend
+cp .env.example .env          # VITE_API_URL defaults to http://localhost:8000
+pnpm install
+pnpm dev
+```
+
+Open **http://localhost:5173** in your browser. Log in with the same credentials configured in `.env` (`DOCFORGE_USERNAME` / `DOCFORGE_PASSWORD`).
+
+> The frontend talks to the API server started in step 7. Both must be running at the same time.
 
 ---
 
@@ -217,3 +235,8 @@ After running the quickstart, verify:
 - [ ] Output file downloaded via API
 - [ ] Project appears in `GET /projects` list
 - [ ] Python API produces equivalent output to CLI
+- [ ] Frontend dev server starts at `http://localhost:5173`
+- [ ] Login page authenticates and redirects to Home
+- [ ] New Project wizard completes end-to-end (upload → generate → download)
+- [ ] Projects page lists past publications with correct status badges
+- [ ] Dark mode toggle persists across page reloads
