@@ -56,7 +56,7 @@ def _extract_title(doc: Any, path: Path) -> str:
     if doc.core_properties.title:
         return str(doc.core_properties.title)
     for para in doc.paragraphs:
-        if para.style.name.startswith("Heading 1") and para.text.strip():
+        if para.style and para.style.name.startswith("Heading 1") and para.text.strip():
             return str(para.text).strip()
     return path.stem
 
