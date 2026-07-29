@@ -30,15 +30,17 @@ export function Step3PublicationConfig() {
   const [newPattern, setNewPattern] = useState('')
   const t = useT()
 
+  const patterns = draft.placeholderPatterns ?? []
+
   function addPattern() {
     const p = newPattern.trim()
-    if (!p || draft.placeholderPatterns.includes(p)) return
-    setPublicationConfig({ placeholderPatterns: [...draft.placeholderPatterns, p] })
+    if (!p || patterns.includes(p)) return
+    setPublicationConfig({ placeholderPatterns: [...patterns, p] })
     setNewPattern('')
   }
 
   function removePattern(p: string) {
-    setPublicationConfig({ placeholderPatterns: draft.placeholderPatterns.filter((x) => x !== p) })
+    setPublicationConfig({ placeholderPatterns: patterns.filter((x) => x !== p) })
   }
 
   function selectFormat(fmt: typeof OUTPUT_FORMATS[number]) {
@@ -376,9 +378,9 @@ export function Step3PublicationConfig() {
               <Label className="text-xs">{t.step3.placeholderPatterns}</Label>
               <HintIcon text={t.step3.hints.placeholderPatterns} />
             </div>
-            {draft.placeholderPatterns.length > 0 && (
+            {patterns.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {draft.placeholderPatterns.map((p) => (
+                {patterns.map((p) => (
                   <span key={p} className="flex items-center gap-1 rounded border bg-background px-2 py-0.5 text-xs font-mono">
                     {p}
                     <button type="button" onClick={() => removePattern(p)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove pattern ${p}`}>
