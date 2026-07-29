@@ -34,6 +34,7 @@ export function Step4Preview() {
         headers_footers: draft.headersFooters,
         validation_level: draft.validationLevel,
         offline_mode: draft.offlineMode,
+        extra_placeholder_patterns: draft.placeholderPatterns,
       },
     })
   }

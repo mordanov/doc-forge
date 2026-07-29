@@ -40,6 +40,7 @@ export interface WizardDraft {
   cacheLocation: string | null
   cacheSize: number | null
   maxAiRequests: number | null
+  placeholderPatterns: string[]
   estimate: JobEstimate | null
   activeJobId: string | null
 }

@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from pydantic import BaseModel
 
 from docforge.document.analyser import analyse
 from docforge.logging.setup import get_logger
@@ -55,8 +56,14 @@ async def upload_document(
     return {"id": doc_id, "filename": file.filename, "size": size}
 
 
+class AnalyseRequest(BaseModel):
+    extra_placeholder_patterns: list[str] = []
+
+
 @router.post("/{doc_id}/analyse")
-async def analyse_document(doc_id: str, request: Request) -> dict:
+async def analyse_document(
+    doc_id: str, request: Request, body: AnalyseRequest = AnalyseRequest()
+) -> dict:
     _auth_check(request)
 
     upload_dir = Path(request.app.state.upload_dir)
@@ -67,7 +74,10 @@ async def analyse_document(doc_id: str, request: Request) -> dict:
     from docforge.config.schema import ImagesConfig
 
     images_cfg = ImagesConfig()
-    model, issues = analyse(path, extra_placeholder_patterns=images_cfg.extra_placeholder_patterns)
+    combined_patterns = list(images_cfg.extra_placeholder_patterns) + list(
+        body.extra_placeholder_patterns
+    )
+    model, issues = analyse(path, extra_placeholder_patterns=combined_patterns)
     stats = model.statistics
 
     return {

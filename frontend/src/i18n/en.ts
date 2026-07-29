@@ -185,6 +185,10 @@ const en = {
     parallelDownloads: 'Parallel Downloads',
     retryCount: 'Retry Count',
     timeout: 'Timeout (s)',
+    placeholderPatterns: 'Placeholder Patterns',
+    placeholderPatternPlaceholder: 'e.g. 📷\\s*Фото\\s*\\d+',
+    addPattern: 'Add',
+    placeholderPatternsDesc: 'Regex patterns matched against paragraph text to detect image placeholders. Add custom patterns if your document uses non-standard markers.',
     hints: {
       preset: 'A preset combines all settings below into a ready-made configuration for a specific document type.',
       theme: 'The visual template that controls fonts, colours, and page layout of the output document.',
@@ -205,6 +209,7 @@ const en = {
       parallelDownloads: 'Number of image downloads that run simultaneously. Higher values speed up large documents.',
       retryCount: 'How many times a failed download or AI call is retried before being skipped.',
       timeout: 'Maximum seconds to wait for a single network request before it is considered failed.',
+      placeholderPatterns: 'Additional regex patterns (case-insensitive) matched against paragraph text to identify image placeholders. Useful for documents that use non-standard markers like emoji prefixes or custom labels.',
     },
   },
 

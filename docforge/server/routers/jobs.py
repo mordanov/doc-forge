@@ -217,7 +217,9 @@ async def estimate_job(body: EstimateRequest, request: Request) -> dict:
 
     from docforge.document.analyser import analyse
 
-    model, _issues = analyse(input_path)
+    cfg = getattr(body, "config", {}) or {}
+    extra_patterns = cfg.get("extra_placeholder_patterns") or []
+    model, _issues = analyse(input_path, extra_placeholder_patterns=extra_patterns)
     stats = model.statistics
 
     ai_requests = stats.chapter_count
@@ -228,7 +230,6 @@ async def estimate_job(body: EstimateRequest, request: Request) -> dict:
     cost_usd = round(ai_tokens * 0.8 * 2.50 / 1_000_000 + ai_tokens * 0.2 * 10.00 / 1_000_000, 4)
 
     # Derive structural features from config hints passed in the estimate body
-    cfg = getattr(body, "config", {}) or {}
     cover_page = cfg.get("coverPage", "auto")
     toc = cfg.get("tableOfContents", "generate")
     headers_footers = cfg.get("headersFooters", "generate")

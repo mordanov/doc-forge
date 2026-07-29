@@ -7,9 +7,9 @@ export function useAnalyseDocument(docId: string | null) {
   const draft = useWizardStore((s) => s.draft)
 
   return useQuery({
-    queryKey: ['analyse', docId],
+    queryKey: ['analyse', docId, draft.placeholderPatterns],
     queryFn: async () => {
-      const analysis = await analyseDocument(docId!)
+      const analysis = await analyseDocument(docId!, draft.placeholderPatterns)
       setDocument({ id: docId!, filename: draft.filename!, size: 0 }, analysis)
       return analysis
     },

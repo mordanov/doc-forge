@@ -10,7 +10,9 @@ export async function uploadDocument(file: File): Promise<UploadedDocument> {
   return data
 }
 
-export async function analyseDocument(docId: string): Promise<DocumentAnalysis> {
-  const { data } = await api.post<DocumentAnalysis>(`/documents/${docId}/analyse`)
+export async function analyseDocument(docId: string, extraPatterns: string[] = []): Promise<DocumentAnalysis> {
+  const { data } = await api.post<DocumentAnalysis>(`/documents/${docId}/analyse`, {
+    extra_placeholder_patterns: extraPatterns,
+  })
   return data
 }

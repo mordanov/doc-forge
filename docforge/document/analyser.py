@@ -37,9 +37,12 @@ _INLINE_PLACEHOLDER_RE = re.compile(
 
 # Structural markers: standalone lines that label a photo block.
 # These are whole-paragraph patterns — the paragraph text is matched in full.
+# The optional leading group matches any emoji character(s) before the keyword
+# (e.g. "📷 Фото 1" uses a camera emoji prefix common in Russian templates).
 _STRUCTURAL_PLACEHOLDER_RE = re.compile(
     r"""
-    ^\s*(
+    ^\s*[\U00010000-\U0010FFFF\U00002600-\U000027BF\U0001F300-\U0001F9FF]*  # optional leading emoji(s)
+    \s*(
         (?:фото|фотография|рис(?:унок)?|фиг(?:ура)?|иллюстрация)   # Russian
         |(?:photo|figure|fig|illustration|image|picture|pic)        # English/common
         |(?:foto|abbildung|abb)                                      # German/Spanish

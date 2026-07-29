@@ -9,7 +9,7 @@ import { HintIcon } from '@/components/HintIcon'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Plus } from 'lucide-react'
 import { useT } from '@/hooks/useT'
 
 const LANGUAGES = [
@@ -27,7 +27,19 @@ const IMAGE_SOURCES = ['wikimedia', 'pexels', 'unsplash'] as const
 export function Step3PublicationConfig() {
   const { draft, setPublicationConfig, applyPreset, goNext, goBack } = useWizardStore()
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [newPattern, setNewPattern] = useState('')
   const t = useT()
+
+  function addPattern() {
+    const p = newPattern.trim()
+    if (!p || draft.placeholderPatterns.includes(p)) return
+    setPublicationConfig({ placeholderPatterns: [...draft.placeholderPatterns, p] })
+    setNewPattern('')
+  }
+
+  function removePattern(p: string) {
+    setPublicationConfig({ placeholderPatterns: draft.placeholderPatterns.filter((x) => x !== p) })
+  }
 
   function selectFormat(fmt: typeof OUTPUT_FORMATS[number]) {
     setPublicationConfig({ outputFormat: fmt })
@@ -336,26 +348,67 @@ export function Step3PublicationConfig() {
       </button>
 
       {advancedOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 bg-muted/30">
-          {[
-            { id: 'parallel-downloads', label: t.step3.parallelDownloads, hint: t.step3.hints.parallelDownloads, value: draft.parallelDownloads, key: 'parallelDownloads' as const },
-            { id: 'retry-count', label: t.step3.retryCount, hint: t.step3.hints.retryCount, value: draft.retryCount, key: 'retryCount' as const },
-            { id: 'timeout', label: t.step3.timeout, hint: t.step3.hints.timeout, value: draft.timeout, key: 'timeout' as const },
-          ].map(({ id, label, hint, value, key }) => (
-            <div key={id} className="space-y-1">
-              <div className="flex items-center gap-1">
-                <Label htmlFor={id} className="text-xs">{label}</Label>
-                <HintIcon text={hint} />
+        <div className="flex flex-col gap-4 rounded-lg border p-4 bg-muted/30">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { id: 'parallel-downloads', label: t.step3.parallelDownloads, hint: t.step3.hints.parallelDownloads, value: draft.parallelDownloads, key: 'parallelDownloads' as const },
+              { id: 'retry-count', label: t.step3.retryCount, hint: t.step3.hints.retryCount, value: draft.retryCount, key: 'retryCount' as const },
+              { id: 'timeout', label: t.step3.timeout, hint: t.step3.hints.timeout, value: draft.timeout, key: 'timeout' as const },
+            ].map(({ id, label, hint, value, key }) => (
+              <div key={id} className="space-y-1">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor={id} className="text-xs">{label}</Label>
+                  <HintIcon text={hint} />
+                </div>
+                <input
+                  id={id}
+                  type="number"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  value={value}
+                  onChange={(e) => setPublicationConfig({ [key]: parseInt(e.target.value) || 0 })}
+                />
               </div>
-              <input
-                id={id}
-                type="number"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                value={value}
-                onChange={(e) => setPublicationConfig({ [key]: parseInt(e.target.value) || 0 })}
-              />
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1">
+              <Label className="text-xs">{t.step3.placeholderPatterns}</Label>
+              <HintIcon text={t.step3.hints.placeholderPatterns} />
             </div>
-          ))}
+            {draft.placeholderPatterns.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {draft.placeholderPatterns.map((p) => (
+                  <span key={p} className="flex items-center gap-1 rounded border bg-background px-2 py-0.5 text-xs font-mono">
+                    {p}
+                    <button type="button" onClick={() => removePattern(p)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove pattern ${p}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder={t.step3.placeholderPatternPlaceholder}
+                value={newPattern}
+                onChange={(e) => setNewPattern(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPattern() } }}
+                className="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-1 text-xs font-mono"
+              />
+              <button
+                type="button"
+                onClick={addPattern}
+                disabled={!newPattern.trim()}
+                className="flex h-8 items-center gap-1 rounded-md border px-3 text-xs hover:bg-accent disabled:opacity-40"
+              >
+                <Plus className="h-3 w-3" />
+                {t.step3.addPattern}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">{t.step3.placeholderPatternsDesc}</p>
+          </div>
         </div>
       )}
 

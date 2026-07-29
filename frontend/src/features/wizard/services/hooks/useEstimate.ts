@@ -16,6 +16,7 @@ export function useEstimate() {
       draft.coverPage,
       draft.tableOfContents,
       draft.headersFooters,
+      draft.placeholderPatterns,
     ],
     queryFn: async () => {
       const est = await getEstimate({
@@ -28,6 +29,7 @@ export function useEstimate() {
           coverPage: draft.coverPage,
           tableOfContents: draft.tableOfContents,
           headersFooters: draft.headersFooters,
+          extra_placeholder_patterns: draft.placeholderPatterns,
         },
       })
       setEstimate(est)

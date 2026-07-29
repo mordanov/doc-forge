@@ -46,6 +46,7 @@ async def render_pipeline(
     offline_mode: bool = False,
     image_sources: list[str] | None = None,
     image_cache_dir: Path | None = None,
+    extra_placeholder_patterns: list[str] | None = None,
 ) -> RenderingReport:
     job_id = str(uuid.uuid4())
     report = RenderingReport(
@@ -65,7 +66,9 @@ async def render_pipeline(
 
         # Stage 2: Analyse
         on_stage(RenderStage.ANALYSING, 15, "Analysing document structure")
-        model, issues = analyse(input_path, extra_placeholder_patterns=[])
+        model, issues = analyse(
+            input_path, extra_placeholder_patterns=extra_placeholder_patterns or []
+        )
         logger.info(
             "pipeline_analysed",
             chapters=len(model.chapters),

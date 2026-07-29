@@ -39,6 +39,7 @@ const DEFAULT_DRAFT: WizardDraft = {
   cacheLocation: null,
   cacheSize: null,
   maxAiRequests: null,
+  placeholderPatterns: [],
   estimate: null,
   activeJobId: null,
 }

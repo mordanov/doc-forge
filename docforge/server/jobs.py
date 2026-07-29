@@ -131,6 +131,7 @@ class JobQueue:
                     on_stage=on_stage,
                     offline_mode=bool(cfg.get("offline_mode", False)),
                     image_sources=cfg.get("image_sources") or ["wikimedia"],
+                    extra_placeholder_patterns=cfg.get("extra_placeholder_patterns") or [],
                 )
 
                 # Run additional format exporters after the core pipeline
